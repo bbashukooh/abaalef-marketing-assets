@@ -1,0 +1,42 @@
+name: Import launch videos
+on:
+  push:
+    paths:
+      - '.github/workflows/import-launch-videos.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify original MP4s
+        run: |
+          set -euo pipefail
+          mkdir -p launch-2026-11-19
+          curl --fail --location --silent --show-error --max-time 120 'https://at.adobe.com/W4ZjX3Sr4MXVliXK' -o launch-2026-11-19/BabaAlef-Launch-LargeConfetti-X.mp4
+          curl --fail --location --silent --show-error --max-time 120 'https://at.adobe.com/10igfJGMbNd0NxHQ' -o launch-2026-11-19/BabaAlef-Launch-LargeConfetti-Facebook.mp4
+          curl --fail --location --silent --show-error --max-time 120 'https://at.adobe.com/pl2SMxWR5kK1ZjaU' -o launch-2026-11-19/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4
+          python - <<'PY'
+          from pathlib import Path
+          expected = {
+              'X': 1163820,
+              'Facebook': 1034871,
+              'Story-Reel': 2357184,
+          }
+          for suffix, size in expected.items():
+              p = Path(f'launch-2026-11-19/BabaAlef-Launch-LargeConfetti-{suffix}.mp4')
+              assert p.stat().st_size == size, f'Unexpected file size: {p.name}'
+              with p.open('rb') as f:
+                  assert f.read(12)[4:8] == b'ftyp', f'Not an MP4: {p.name}'
+              print(f'Verified {p.name}: {size} bytes')
+          PY
+      - name: Commit original files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add launch-2026-11-19/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Archive verified original launch campaign videos'
+          git push
