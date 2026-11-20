@@ -1,0 +1,64 @@
+name: Final sentence slide - locked font and corrected order
+on:
+  push:
+    paths:
+      - '.github/workflows/final-font-sentences.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render original template with verified Baba Alef font
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/baba-sentence-final
+          curl -fLsS --retry 2 --max-time 60 'https://at.adobe.com/TSYdnpTdIxAZyy7Q' -o /tmp/baba-sentence-final/template.png
+          curl -fLsS --retry 2 https://babaalef.com/fonts/BabaAlef-Font-v1.0.2.woff2 -o /tmp/baba-sentence-final/course.woff2
+          curl -fLsS --retry 2 https://babaalef.com/fonts/vazirmatn-extrabold.ttf -o /tmp/baba-sentence-final/ui.ttf
+          test "$(git hash-object /tmp/baba-sentence-final/course.woff2)" = "5d20490ac5571973bca0c333804c6079d2ec6ad3"
+          python -m pip install --quiet pillow fonttools brotli uharfbuzz
+          python - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont,features
+          from fontTools.ttLib import TTFont
+          from pathlib import Path
+          import uharfbuzz as hb
+          assert features.check('raqm')
+          p=Path('/tmp/baba-sentence-final')
+          t=TTFont(p/'course.woff2');t.flavor=None;t.save(p/'course.ttf')
+          hf=hb.Font(hb.Face((p/'course.ttf').read_bytes()))
+          im=Image.open(p/'template.png').convert('RGB').resize((1080,1350),Image.Resampling.LANCZOS)
+          d=ImageDraw.Draw(im)
+          def ft(size,face='course'):
+              return ImageFont.truetype(str(p/(face+'.ttf')),size,layout_engine=ImageFont.Layout.RAQM)
+          d.text((540,295),'از کلمه تا جمله',font=ft(42,'ui'),fill='#092343',anchor='mm',direction='rtl',language='fa')
+          sentences=['بابا آب داد','مادر به خانه آمد','جنگل زیبا است','سارا به کلاس رفت','من انار دارم']
+          baselines=[420,565,710,855,1000]
+          size=126
+          def bbox(s):
+              return d.textbbox((0,0),s,font=ft(size),anchor='ms',direction='rtl',language='fa')
+          while size>70:
+              boxes=[bbox(s) for s in sentences]
+              gaps=[baselines[i]+boxes[i][1]-baselines[i-1]-boxes[i-1][3] for i in range(1,5)]
+              if all(b[2]-b[0]<=780 for b in boxes) and min(gaps)>=18 and baselines[0]+boxes[0][1]>=326 and 540+boxes[-1][0]>=270 and baselines[-1]+boxes[-1][3]<=1125:
+                  break
+              size-=1
+          assert size>70
+          for i,(s,y) in enumerate(zip(sentences,baselines)):
+              b=hb.Buffer();b.add_str(s);b.guess_segment_properties();hb.shape(hf,b)
+              assert all(i.codepoint!=0 for i in b.glyph_infos),s
+              d.line((295 if i==4 else 132,y,948,y),fill='#C0BADB',width=3)
+              d.text((540,y),s,font=ft(size),fill='#092343',anchor='ms',direction='rtl',language='fa')
+          print('Verified font git blob 5d20490ac5571973bca0c333804c6079d2ec6ad3; font size',size,'row gap',min(gaps))
+          out=Path('custom-font-2026-11-20/carousel/05-sentences')
+          im.save(out.with_suffix('.png'),optimize=True)
+          im.save(out.with_suffix('.jpg'),quality=93,subsampling=0,optimize=True)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/carousel/05-sentences.png custom-font-2026-11-20/carousel/05-sentences.jpg
+          git diff --cached --quiet && exit 0
+          git commit -m 'Final sentence poster with verified locked font and corrected order'
+          git push
