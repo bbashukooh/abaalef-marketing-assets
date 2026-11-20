@@ -1,0 +1,97 @@
+name: Render five-slide locked-font carousel
+on:
+  push:
+    paths:
+      - '.github/workflows/render-font-carousel.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render carousel from original course font and approved artwork
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/baba-carousel custom-font-2026-11-20/carousel
+          curl -fLsS --max-time 120 'https://at.adobe.com/KiqNE2Z1Kn13a8No' -o /tmp/baba-carousel/template.png
+          curl -fLsS --max-time 120 'https://at.adobe.com/bfEZdPMvkY41o6Z5' -o /tmp/baba-carousel/cover.png
+          curl -fLsS https://babaalef.com/fonts/BabaAlef-Font-v1.0.2.woff2 -o /tmp/baba-carousel/course.woff2
+          curl -fLsS https://babaalef.com/fonts/vazirmatn-extrabold.ttf -o /tmp/baba-carousel/ui.ttf
+          python -m pip install --quiet pillow fonttools brotli uharfbuzz
+          python - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont,features
+          from fontTools.ttLib import TTFont
+          from pathlib import Path
+          import uharfbuzz as hb
+          assert features.check('raqm')
+          p=Path('/tmp/baba-carousel'); out=Path('custom-font-2026-11-20/carousel')
+          font=TTFont(p/'course.woff2');font.flavor=None;font.save(p/'course.ttf')
+          face=hb.Face((p/'course.ttf').read_bytes()); hf=hb.Font(face); order=font.getGlyphOrder()
+          def verify(s):
+              b=hb.Buffer();b.add_str(s);b.guess_segment_properties();hb.shape(hf,b)
+              assert all(i.codepoint!=0 for i in b.glyph_infos), s
+              print(s, [order[i.codepoint] for i in b.glyph_infos])
+          W,H=1080,1350
+          base=Image.open(p/'template.png').convert('RGB').resize((W,H),Image.Resampling.LANCZOS)
+          Image.open(p/'cover.png').convert('RGB').resize((W,H),Image.Resampling.LANCZOS).save(out/'01-introduction.png',optimize=True)
+          NAVY='#092343'; TEAL='#008C80'; GUIDE='#C0BADB'; GRAY='#516579'
+          def ft(size,course=True):
+              return ImageFont.truetype(str(p/('course.ttf' if course else 'ui.ttf')),size,layout_engine=ImageFont.Layout.RAQM)
+          def rowfit(d,words,size,max_width):
+              while any(d.textbbox((0,0),s,font=ft(size),anchor='ms',direction='rtl',language='fa')[2]-d.textbbox((0,0),s,font=ft(size),anchor='ms',direction='rtl',language='fa')[0]>max_width for s in words):
+                  size-=1
+              return size
+          def title(d,s):
+              d.text((540,295),s,fill=NAVY,font=ft(42,False),anchor='mm',direction='rtl',language='fa')
+          def label(d,x,y,s,size=24,color=TEAL):
+              d.text((x,y),s,fill=color,font=ft(size,False),anchor='mm',direction='rtl',language='fa')
+          def guide(d,y,left=132,right=948):
+              d.line((left,y,right,y),fill=GUIDE,width=3)
+          def glyph(d,x,y,s,size):
+              verify(s)
+              d.text((x,y),s,fill=NAVY,font=ft(size),anchor='ms',direction='rtl',language='fa')
+          def save(im,name):
+              im.save(out/name,optimize=True)
+          im=base.copy();d=ImageDraw.Draw(im);title(d,'شناخت حروف فارسی')
+          letters=[['آ','ب','ج','د'],['ر','س','ص','ط'],['ع','ف','ک','م']]
+          xs=[840,640,440,240]
+          sz=rowfit(d,sum(letters,[]),188,170)
+          for row,y in zip(letters,[465,665,865]):
+              guide(d,y)
+              for x,s in zip(xs,row):glyph(d,x,y,s,sz)
+          save(im,'02-letters.png')
+          im=base.copy();d=ImageDraw.Draw(im);title(d,'یک حرف، چند شکل')
+          forms=[('ب',['ب','ب\u200d','\u200dب\u200d','\u200dب']),('م',['م','م\u200d','\u200dم\u200d','\u200dم'])]
+          # All four forms are selected by the font's contextual shaping; no tatweel is added.
+          for (letter,words),head,y in zip(forms,[365,665],[515,815]):
+              label(d,540,head,'شکل‌های حرف '+letter,33)
+              guide(d,y)
+              sz=rowfit(d,words,155,170)
+              for x,s,caption in zip(xs,words,['تنها','اول','وسط','آخر']):
+                  glyph(d,x,y,s,sz);label(d,x,y+96,caption,24,GRAY)
+          save(im,'03-letter-forms.png')
+          im=base.copy();d=ImageDraw.Draw(im);title(d,'از حرف تا کلمه')
+          words=[['آب','مامان','بازی'],['کلمه','کفش','چراغ'],['توپ','دوست','ژله']]
+          sz=rowfit(d,sum(words,[]),154,246)
+          for row,y in zip(words,[470,675,880]):
+              guide(d,y)
+              for x,s in zip([810,540,270],row):glyph(d,x,y,s,sz)
+          save(im,'04-words.png')
+          im=base.copy();d=ImageDraw.Draw(im);title(d,'از کلمه تا جمله')
+          sentences=['بابا آب داد','مادر به خانه آمد','سارا به کلاس رفت','من انار دارم','جنگل زیبا است']
+          sz=rowfit(d,sentences,141,780)
+          for s,y in zip(sentences,[415,535,655,775,895]):
+              guide(d,y);glyph(d,540,y,s,sz)
+          save(im,'05-sentences.png')
+          print('Rendered all five slides at 1080 x 1350; course font sizes in pixels:',sz)
+          PY
+      - name: Archive finished posters only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/carousel/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Render five-slide custom font carousel'
+          git push
