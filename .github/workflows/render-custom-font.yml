@@ -1,0 +1,94 @@
+name: Render custom font campaign
+on:
+  push:
+    paths:
+      - '.github/workflows/render-custom-font.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch authentic brand assets and render
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/baba-brand custom-font-2026-11-20
+          curl -fLsS https://babaalef.com/fonts/BabaAlef-Font-v1.0.2.woff2 -o /tmp/baba-brand/course.woff2
+          curl -fLsS https://babaalef.com/fonts/vazirmatn-extrabold.ttf -o /tmp/baba-brand/ui.ttf
+          curl -fLsS https://babaalef.com/brand/poses/11_pencil.webp -o /tmp/baba-brand/mascot.webp
+          python -m pip install --quiet pillow fonttools brotli
+          python - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont, features
+          from fontTools.ttLib import TTFont
+          from pathlib import Path
+          assert features.check('raqm'), 'Persian shaping requires RAQM'
+          brand=Path('/tmp/baba-brand')
+          f=TTFont(brand/'course.woff2'); f.flavor=None; f.save(brand/'course.ttf')
+          ui=brand/'ui.ttf'; course=brand/'course.ttf'
+          mascot=Image.open(brand/'mascot.webp').convert('RGBA')
+          mascot=mascot.crop(mascot.getbbox())
+          CREAM='#FAF8F2'; INK='#263849'; TEAL='#268D82'; MINT='#E1F0E9'; ORANGE='#FF9B65'; WHITE='#FFFFFF'; LINE='#B7DCD1'
+          out=Path('custom-font-2026-11-20')
+          def render(w,h,name):
+              im=Image.new('RGB',(w,h),CREAM); d=ImageDraw.Draw(im)
+              def font(s,face=ui):return ImageFont.truetype(str(face),s,layout_engine=ImageFont.Layout.RAQM)
+              def txt(x,y,s,size,color=INK,face=ui,anchor='mm',rtl=True):
+                  d.text((x,y),s,font=font(size,face),fill=color,anchor=anchor,direction='rtl' if rtl else 'ltr',language='fa' if rtl else 'en')
+              def fit(x,y,s,size,width,color=INK,face=ui,anchor='mm',rtl=True):
+                  while d.textlength(s,font=font(size,face),direction='rtl' if rtl else 'ltr')>width: size-=1
+                  txt(x,y,s,size,color,face,anchor,rtl)
+              def card(rect,r=32,fill=WHITE,outline=None):
+                  d.rounded_rectangle(rect,radius=r,fill=fill,outline=outline,width=3 if outline else 1)
+              def put_mascot(rect):
+                  x0,y0,x1,y1=rect; m=mascot.copy(); m.thumbnail((x1-x0,y1-y0),Image.Resampling.LANCZOS)
+                  im.paste(m,(x0+(x1-x0-m.width)//2,y0+(y1-y0-m.height)//2),m)
+              def sample(x0,y0,x1,y1,letters=False):
+                  card((x0,y0,x1,y1),30,WHITE,LINE)
+                  cx=(x0+x1)//2; width=x1-x0; ht=y1-y0
+                  txt(cx,y0+32,'فونت اختصاصی بابا الف',25,TEAL)
+                  base=y0+int(ht*.70)
+                  d.line((x0+30,base,x1-30,base),fill=LINE,width=3)
+                  word='آ  ب  پ  ت' if letters else 'بابا'
+                  size=int(ht*.58)
+                  while d.textlength(word,font=font(size,course),direction='rtl')>width-50:size-=1
+                  d.text((cx,base),word,font=font(size,course),fill=TEAL,anchor='ms',direction='rtl',language='fa')
+              if h>w:
+                  card((50,42,w-50,h-42),52,MINT)
+                  txt(w//2,115,'بابا الف',48,TEAL)
+                  fit(w//2,223,'در بابا الف، حتی فونت هم',77,w-150)
+                  fit(w//2,324,'برای یادگیری طراحی شده!',77,w-150,TEAL)
+                  fit(w//2,423,'با الهام از دست‌خط آموزشی کلاس اول',39,w-150)
+                  sample(99,491,w-99,800,True)
+                  card((470,840,w-100,1104),32,WHITE,LINE)
+                  txt(720,880,'از حرف تا کلمه',28,TEAL)
+                  d.line((510,1028,w-140,1028),fill=LINE,width=3)
+                  d.text((720,1028),'بابا',font=font(135,course),fill=TEAL,anchor='ms',direction='rtl',language='fa')
+                  put_mascot((75,815,480,1195))
+                  card((300,1195,780,1280),42,TEAL)
+                  txt(540,1238,'babaalef.com',39,WHITE,rtl=False)
+              else:
+                  card((30,30,w-30,h-30),35,MINT)
+                  mid=w//2
+                  txt(895,82,'بابا الف',35,TEAL)
+                  fit(885,147,'در بابا الف، حتی فونت هم',52,530)
+                  fit(885,219,'برای یادگیری طراحی شده!',52,530,TEAL)
+                  fit(885,280,'با الهام از دست‌خط آموزشی کلاس اول',30,540)
+                  sample(610,322,w-65,h-115,False)
+                  card((765,h-99,1009,h-46),26,TEAL)
+                  txt(887,h-72,'babaalef.com',26,WHITE,rtl=False)
+                  put_mascot((58,66,540,h-95))
+              im.save(out/name,quality=96,optimize=True)
+          render(1080,1350,'BabaAlef-CustomFont-Instagram.png')
+          render(1200,630,'BabaAlef-CustomFont-Facebook.png')
+          render(1200,675,'BabaAlef-CustomFont-X.png')
+          PY
+      - name: Save campaign artwork only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Render custom-font campaign using authentic brand assets'
+          git push
