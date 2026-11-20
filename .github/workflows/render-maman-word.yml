@@ -1,0 +1,49 @@
+name: Render locked font word Maman
+on:
+  push:
+    paths:
+      - '.github/workflows/render-maman-word.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shape word using deployed course font
+        run: |
+          set -euo pipefail
+          curl -fLsS https://babaalef.com/fonts/BabaAlef-Font-v1.0.2.woff2 -o /tmp/course.woff2
+          python -m pip install --quiet fonttools brotli uharfbuzz
+          mkdir -p custom-font-2026-11-20
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          from fontTools.pens.svgPathPen import SVGPathPen
+          from fontTools.pens.boundsPen import BoundsPen
+          import uharfbuzz as hb
+          from pathlib import Path
+          t=TTFont('/tmp/course.woff2');t.flavor=None;t.save('/tmp/course.ttf')
+          face=hb.Face(Path('/tmp/course.ttf').read_bytes());font=hb.Font(face);font.scale=(face.upem,face.upem)
+          buf=hb.Buffer();buf.add_str('مامان');buf.guess_segment_properties();hb.shape(font,buf)
+          gs=t.getGlyphSet();order=t.getGlyphOrder();x=0;y=0;paths=[];bounds=[]
+          for info,pos in zip(buf.glyph_infos,buf.glyph_positions):
+              name=order[info.codepoint];assert name!='.notdef'
+              glyph=gs[name];pen=SVGPathPen(gs);glyph.draw(pen);b=BoundsPen(gs);glyph.draw(b)
+              px=x+pos.x_offset;py=y+pos.y_offset
+              if b.bounds:
+                  a,c,d,e=b.bounds;bounds.append((a+px,c+py,d+px,e+py))
+              paths.append(f'<path transform="translate({px} {py})" d="{pen.getCommands()}"/>')
+              x+=pos.x_advance;y+=pos.y_advance
+          xmin=min(a for a,b,c,d in bounds); ymin=min(b for a,b,c,d in bounds);xmax=max(c for a,b,c,d in bounds);ymax=max(d for a,b,c,d in bounds)
+          svg=f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{xmin} {-ymax} {xmax-xmin} {ymax-ymin}" data-baseline="{ymax}"><g fill="#092343" transform="scale(1 -1)">' + ''.join(paths) + '</g></svg>'
+          Path('custom-font-2026-11-20/maman-locked-word.svg').write_text(svg)
+          PY
+      - name: Save outlined word only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/maman-locked-word.svg
+          git diff --cached --quiet && exit 0
+          git commit -m 'Render maman using locked Baba Alef font outlines'
+          git push
