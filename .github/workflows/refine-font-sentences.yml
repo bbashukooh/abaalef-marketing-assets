@@ -1,0 +1,53 @@
+name: Refine sentence slide spacing
+on:
+  push:
+    paths:
+      - '.github/workflows/refine-font-sentences.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          set -euo pipefail
+          mkdir -p /tmp/baba-sentences
+          curl -fLsS 'https://at.adobe.com/UXaXjkrObxeqYKpL' -o /tmp/baba-sentences/template.png
+          curl -fLsS https://babaalef.com/fonts/BabaAlef-Font-v1.0.2.woff2 -o /tmp/baba-sentences/course.woff2
+          curl -fLsS https://babaalef.com/fonts/vazirmatn-extrabold.ttf -o /tmp/baba-sentences/ui.ttf
+          python -m pip install --quiet pillow fonttools brotli
+          python - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont,features
+          from fontTools.ttLib import TTFont
+          from pathlib import Path
+          assert features.check('raqm')
+          p=Path('/tmp/baba-sentences')
+          t=TTFont(p/'course.woff2');t.flavor=None;t.save(p/'course.ttf')
+          im=Image.open(p/'template.png').convert('RGB').resize((1080,1350),Image.Resampling.LANCZOS);d=ImageDraw.Draw(im)
+          def ft(s,face='course'):return ImageFont.truetype(str(p/(face+'.ttf')),s,layout_engine=ImageFont.Layout.RAQM)
+          d.text((540,295),'از کلمه تا جمله',font=ft(42,'ui'),fill='#092343',anchor='mm',direction='rtl',language='fa')
+          sentences=['بابا آب داد','مادر به خانه آمد','سارا به کلاس رفت','من انار دارم','جنگل زیبا است']
+          size=122
+          def box(s):return d.textbbox((0,0),s,font=ft(size),anchor='ms',direction='rtl',language='fa')
+          while any(box(s)[2]-box(s)[0]>780 for s in sentences):size-=1
+          baselines=[418,559,700,841,982]
+          for n,(s,y) in enumerate(zip(sentences,baselines)):
+              b=box(s)
+              if n:
+                  prev=box(sentences[n-1])
+                  assert y+b[1]-(baselines[n-1]+prev[3])>=10,(n,b,prev)
+              start=240 if n==4 else 132
+              d.line((start,y,948,y),fill='#C0BADB',width=3)
+              d.text((540 if n!=4 else 566,y),s,font=ft(size),fill='#092343',anchor='ms',direction='rtl',language='fa')
+          out=Path('custom-font-2026-11-20/carousel/05-sentences')
+          im.save(out.with_suffix('.png'),optimize=True)
+          im.save(out.with_suffix('.jpg'),quality=93,subsampling=0,optimize=True)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/carousel/05-sentences.*
+          git diff --cached --quiet && exit 0
+          git commit -m 'Increase sentence line spacing and verify no glyph overlap'
+          git push
