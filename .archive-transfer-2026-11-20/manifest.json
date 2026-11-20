@@ -1,0 +1,76 @@
+[
+  {
+    "source": "launch-2026-11-19/BabaAlef-Launch-LargeConfetti-X.mp4",
+    "sha": "0aa250660c355fc57ef387fa9139c11a422e5989",
+    "parts": [
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-X.mp4.000.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-X.mp4.001.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-X.mp4.002.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-X.mp4.003.b64"
+    ]
+  },
+  {
+    "source": "launch-2026-11-19/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4",
+    "sha": "179920270ce616fb58f42f2c208ceba8c11c7359",
+    "parts": [
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.000.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.001.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.002.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.003.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.004.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.005.b64",
+      ".archive-transfer-2026-11-20/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4.006.b64"
+    ]
+  },
+  {
+    "source": "custom-font-2026-11-20/carousel/01-introduction.png",
+    "sha": "4c4c5fdf0b6bc78f56ed4eb6151abf47d2bf061b",
+    "parts": [
+      ".archive-transfer-2026-11-20/01-introduction.png.000.b64",
+      ".archive-transfer-2026-11-20/01-introduction.png.001.b64",
+      ".archive-transfer-2026-11-20/01-introduction.png.002.b64",
+      ".archive-transfer-2026-11-20/01-introduction.png.003.b64",
+      ".archive-transfer-2026-11-20/01-introduction.png.004.b64"
+    ]
+  },
+  {
+    "source": "custom-font-2026-11-20/carousel/02-letters.png",
+    "sha": "b202f95d67754be79d0437ae7fdbc33dd0a26b77",
+    "parts": [
+      ".archive-transfer-2026-11-20/02-letters.png.000.b64",
+      ".archive-transfer-2026-11-20/02-letters.png.001.b64",
+      ".archive-transfer-2026-11-20/02-letters.png.002.b64",
+      ".archive-transfer-2026-11-20/02-letters.png.003.b64"
+    ]
+  },
+  {
+    "source": "custom-font-2026-11-20/carousel/03-letter-forms.png",
+    "sha": "9103481c7853e5b9402ff0b214dad317630b1bdf",
+    "parts": [
+      ".archive-transfer-2026-11-20/03-letter-forms.png.000.b64",
+      ".archive-transfer-2026-11-20/03-letter-forms.png.001.b64",
+      ".archive-transfer-2026-11-20/03-letter-forms.png.002.b64",
+      ".archive-transfer-2026-11-20/03-letter-forms.png.003.b64"
+    ]
+  },
+  {
+    "source": "custom-font-2026-11-20/carousel/04-words.png",
+    "sha": "1ae0c10c1b0c071c46f66909df1a93c2051cec7f",
+    "parts": [
+      ".archive-transfer-2026-11-20/04-words.png.000.b64",
+      ".archive-transfer-2026-11-20/04-words.png.001.b64",
+      ".archive-transfer-2026-11-20/04-words.png.002.b64",
+      ".archive-transfer-2026-11-20/04-words.png.003.b64"
+    ]
+  },
+  {
+    "source": "custom-font-2026-11-20/carousel/05-sentences.png",
+    "sha": "6e59aee1ab60ecc283bcb6636953eb9b29523527",
+    "parts": [
+      ".archive-transfer-2026-11-20/05-sentences.png.000.b64",
+      ".archive-transfer-2026-11-20/05-sentences.png.001.b64",
+      ".archive-transfer-2026-11-20/05-sentences.png.002.b64",
+      ".archive-transfer-2026-11-20/05-sentences.png.003.b64"
+    ]
+  }
+]
