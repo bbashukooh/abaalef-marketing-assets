@@ -1,0 +1,37 @@
+name: Prepare exact archive transfer chunks
+on:
+  push:
+    paths:
+      - '.github/workflows/prepare-archive-transfer.yml'
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64,json,subprocess
+          from pathlib import Path
+          paths=['launch-2026-11-19/BabaAlef-Launch-LargeConfetti-X.mp4','launch-2026-11-19/BabaAlef-Launch-LargeConfetti-Story-Reel.mp4']+['custom-font-2026-11-20/carousel/'+s+'.png' for s in ['01-introduction','02-letters','03-letter-forms','04-words','05-sentences']]
+          root=Path('.archive-transfer-2026-11-20');root.mkdir(exist_ok=True)
+          manifest=[]
+          for p in paths:
+              b=Path(p).read_bytes()
+              sha=subprocess.check_output(['git','hash-object',p],text=True).strip()
+              enc=base64.b64encode(b).decode('ascii')
+              parts=[]
+              for i in range(0,len(enc),480000):
+                  f=root/(Path(p).name+f'.{i//480000:03}.b64')
+                  f.write_text(enc[i:i+480000]);parts.append(str(f))
+              manifest.append({'source':p,'sha':sha,'parts':parts})
+          (root/'manifest.json').write_text(json.dumps(manifest,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .archive-transfer-2026-11-20/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Prepare temporary chunks of already-public campaign files for archive transfer'
+          git push
