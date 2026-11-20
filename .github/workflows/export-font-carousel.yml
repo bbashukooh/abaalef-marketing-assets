@@ -1,0 +1,33 @@
+name: Export carousel social-ready JPEGs
+on:
+  push:
+    paths:
+      - '.github/workflows/export-font-carousel.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path('custom-font-2026-11-20/carousel')
+          for f in sorted(p.glob('0*.png')):
+              im=Image.open(f).convert('RGB')
+              assert im.size==(1080,1350)
+              dest=f.with_suffix('.jpg')
+              im.save(dest,quality=93,subsampling=0,optimize=True)
+              assert dest.stat().st_size<1000000
+              print(dest,dest.stat().st_size)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom-font-2026-11-20/carousel/*.jpg
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add high-quality social-ready carousel JPEGs'
+          git push
