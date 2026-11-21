@@ -213,17 +213,17 @@ jobs:
           # All original strokes are untouched. Move *complete canvas* for each glyph to align
           # its own true font y=0 with the shared baseline; never shift the horizontal line instead.
           quartet=[
-              ('uni0645.isol',715,529,434,725),
-              ('uni0638.fina',355,529,434,725),
-              ('uni063A.fina',715,922,757,1070),
-              ('uni0647.init',355,922,757,1070)
+              ('uni0645.isol',715,559,435,763),
+              ('uni063A.fina',355,559,435,763),
+              ('uni0638.fina',715,1010,784,1081),
+              ('uni0647.init',355,1010,784,1081)
           ]
           grid=BASE.copy()
           headline(grid,'چهار شکل، چهار حرکت قلم','شکل‌های مختلف حروف را هنگام نوشتن ببین')
           dr=ImageDraw.Draw(grid)
           dr.line((540,435,540,1060),fill='#E0DFE6',width=2)
-          dr.line((179,746,903,746),fill='#E0DFE6',width=2)
-          for y in (529,922):
+          dr.line((179,772,903,772),fill='#E0DFE6',width=2)
+          for y in (559,1010):
               guide(dr,y,231,887)
           grid_frames={}
           for key,cx,target_line,top_limit,bottom_limit in quartet:
