@@ -17,7 +17,7 @@ jobs:
           mkdir -p /tmp/ba-v7 writing-campaign-2026-11-21/preview
           curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/yoTvuykpKGLOWlbB' -o /tmp/ba-v7/blank-board.png
           curl -fLsS --retry 3 --max-time 120 'https://babaalef.com/fonts/vazirmatn-extrabold.ttf' -o /tmp/ba-v7/ui.ttf
-          python -m pip install --quiet pillow fonttools uharfbuzz
+          python -m pip install --quiet pillow fonttools uharfbuzz imageio-ffmpeg
       - name: Verify locked sources and composite actual WebP animation frames
         run: |
           set -euo pipefail
@@ -169,7 +169,7 @@ jobs:
                           fr.save(OUT/(stem+f'-frame-{i:03}.jpg'),quality=89,optimize=True)
                       fr.save(tmp/(f'{i:04}.png'),compress_level=1)
                       if i%2==0:previews.append(fr.resize((540,675),Image.Resampling.LANCZOS))
-                  args=['ffmpeg','-y','-loglevel','error','-framerate',str(fps),'-i',str(tmp/'%04d.png'),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-movflags','+faststart',str(OUT/(stem+'.mp4'))]
+                  args=[__import__('imageio_ffmpeg').get_ffmpeg_exe(),'-y','-loglevel','error','-framerate',str(fps),'-i',str(tmp/'%04d.png'),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-movflags','+faststart',str(OUT/(stem+'.mp4'))]
                   subprocess.run(args,check=True)
               previews[0].save(OUT/(stem+'-preview.gif'),save_all=True,append_images=previews[1:],duration=200,loop=0,optimize=True,disposal=2)
               print('RENDERED',stem,'duration',duration,'size', (OUT/(stem+'.mp4')).stat().st_size)
