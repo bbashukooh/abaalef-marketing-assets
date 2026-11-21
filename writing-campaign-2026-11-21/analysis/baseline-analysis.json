@@ -1,0 +1,102 @@
+[
+  {
+    "glyph": "uni0634.isol",
+    "font_bounds": [
+      54.0,
+      -336.0,
+      867.0,
+      441.0
+    ],
+    "ink_bounds": [
+      100,
+      50,
+      540,
+      470
+    ],
+    "scale_x": 0.5412054120541205,
+    "scale_y": 0.5405405405405406,
+    "baseline_y": 288.37837837837833,
+    "line_fraction_from_top": 0.5675675675675674,
+    "baseline_formula": "(pixelBottom + minFontY * measuredVerticalScale)"
+  },
+  {
+    "glyph": "uni0628.isol",
+    "font_bounds": [
+      54.0,
+      -224.0,
+      775.0,
+      178.0
+    ],
+    "ink_bounds": [
+      42,
+      104,
+      598,
+      416
+    ],
+    "scale_x": 0.7711511789181692,
+    "scale_y": 0.7761194029850746,
+    "baseline_y": 242.14925373134326,
+    "line_fraction_from_top": 0.4427860696517412,
+    "baseline_formula": "(pixelBottom + minFontY * measuredVerticalScale)"
+  },
+  {
+    "glyph": "uni062C.isol",
+    "font_bounds": [
+      59.01754385964912,
+      -389.60655737704917,
+      467.1,
+      165.0
+    ],
+    "ink_bounds": [
+      165,
+      50,
+      475,
+      470
+    ],
+    "scale_x": 0.7596503974514953,
+    "scale_y": 0.7572936064556176,
+    "baseline_y": 174.95344506517694,
+    "line_fraction_from_top": 0.2975082025361356,
+    "baseline_formula": "(pixelBottom + minFontY * measuredVerticalScale)"
+  },
+  {
+    "glyph": "uni0633.isol",
+    "font_bounds": [
+      54.0,
+      -360.0,
+      867.0,
+      161.0
+    ],
+    "ink_bounds": [
+      42,
+      81,
+      598,
+      439
+    ],
+    "scale_x": 0.6838868388683886,
+    "scale_y": 0.6871401151631478,
+    "baseline_y": 191.62955854126682,
+    "line_fraction_from_top": 0.3090211132437621,
+    "baseline_formula": "(pixelBottom + minFontY * measuredVerticalScale)"
+  },
+  {
+    "glyph": "uni0645.isol",
+    "font_bounds": [
+      54.0,
+      -464.0,
+      417.0,
+      29.0
+    ],
+    "ink_bounds": [
+      164,
+      50,
+      476,
+      470
+    ],
+    "scale_x": 0.859504132231405,
+    "scale_y": 0.8519269776876268,
+    "baseline_y": 74.70588235294116,
+    "line_fraction_from_top": 0.05882352941176466,
+    "baseline_formula": "(pixelBottom + minFontY * measuredVerticalScale)"
+  }
+]
