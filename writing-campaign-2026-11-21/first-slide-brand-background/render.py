@@ -120,14 +120,14 @@ hero,hero_ms,hero_size=scaled_frames('uni0634.isol',780,633)
 # not character generation and not modification of the locked V7 ink.
 cover=Image.new('RGB',(W,H),(255,247,239))
 bg_d=ImageDraw.Draw(cover)
-top=(255,250,244);bottom=(255,244,232)
+top=(253,237,226);bottom=(255,242,227)
 for yy in range(H):
     amount=yy/(H-1)
     bg_d.line((0,yy,W,yy),fill=tuple(round(top[k]*(1-amount)+bottom[k]*amount) for k in range(3)),width=1)
 brand_palette={
-    "cream_top":"#FFF7F0","warm_peach_bottom":"#FFEEDD",
-    "orange_bursts":"#FF9618","golden_glow":"#FFD66A",
-    "warm_sunlight":"#FFB26C","mint":"#54D7B5","turquoise":"#00BFAE",
+    "cream_top":"#FDEDE2","warm_peach_bottom":"#FFF2E3", 
+    "orange_bursts":"#FF9805","golden_glow":"#FFCE40",
+    "warm_sunlight":"#FFAE59","mint":"#24C999","turquoise":"#00BDAF",
     "headline_gold":"#FFE04B"}
 def backdrop_glow(cx,cy,rx,ry,rgb,alpha,blur):
     global cover
@@ -139,13 +139,48 @@ def backdrop_glow(cx,cy,rx,ry,rgb,alpha,blur):
     layer.putalpha(opacity)
     cover=Image.alpha_composite(cover.convert('RGBA'),layer).convert('RGB')
 # Soft watercolor-like atmosphere from the previously approved poster.
-backdrop_glow(75,195,330,310,(255,217,181),80,150)
-backdrop_glow(1040,245,330,340,(255,222,185),80,155)
-backdrop_glow(560,475,490,160,(255,237,207),35,105)
-backdrop_glow(-10,785,260,390,(197,244,223),82,125)
-backdrop_glow(1015,825,305,450,(185,243,219),86,135)
-backdrop_glow(560,1270,515,245,(255,225,186),86,145)
-backdrop_glow(110,1190,235,260,(187,239,215),70,95)
+backdrop_glow(75,195,320,300,(255,190,139),70,146)
+backdrop_glow(1040,245,330,310,(255,193,131),70,153)
+backdrop_glow(560,470,450,145,(255,214,120),44,130)
+backdrop_glow(-10,780,235,360,(37,206,145),43,140)
+backdrop_glow(1015,840,290,395,(35,205,150),42,145)
+backdrop_glow(560,1270,515,245,(255,207,140),65,145)
+backdrop_glow(110,1190,235,260,(35,196,135),40,100)
+# Decorative jade-green leaves: only background shapes, behind the ORIGINAL
+# board, mascot and letter layers. Their palette/placement matches the user's
+# latest landscape example without importing/redrawing any lettering or mascots.
+def leaf(x,y,w,h,angle,base_color):
+    global cover
+    leaf_canvas=Image.new('RGBA',(round(w*2.1),round(h*2.1)),(0,0,0,0))
+    ld=ImageDraw.Draw(leaf_canvas)
+    cx,cy=leaf_canvas.width/2,leaf_canvas.height/2
+    ld.ellipse((cx-w/2,cy-h/2,cx+w/2,cy+h/2),fill=base_color)
+    ld.arc((cx-w*.32,cy-h*.35,cx+w*.25,cy+h*.18),192,300,fill=(169,255,203,110),width=4)
+    rotated=leaf_canvas.rotate(angle,expand=True,resample=Image.Resampling.BICUBIC)
+    pos=(int(x-rotated.width/2),int(y-rotated.height/2))
+    clip=Image.new('RGBA',(W,H),(0,0,0,0))
+    clip.paste(rotated,pos,rotated)
+    cover=Image.alpha_composite(cover.convert('RGBA'),clip).convert('RGB')
+# Vegetation clustered outside the approved educational board content.
+for x,y,w,h,ang,col in [
+    (1036,620,105,205,-33,(15,182,119,205)),
+    (1065,790,95,180,30,(0,168,105,200)),
+    (1022,979,103,185,-16,(21,200,130,190)),
+    (12,850,91,161,23,(3,184,117,145)),
+    (20,1100,98,185,-25,(15,181,118,175))
+]: leaf(x,y,w,h,ang,col)
+# Small golden star glints echo the yesterday artwork and remain decorative only.
+def star(cx,cy,span,fill='#FFB700'):
+    global cover
+    d=ImageDraw.Draw(cover)
+    d.polygon([(cx,cy-span),(cx+span*.21,cy-span*.21),
+               (cx+span,cy),(cx+span*.21,cy+span*.21),
+               (cx,cy+span),(cx-span*.21,cy+span*.21),
+               (cx-span,cy),(cx-span*.21,cy-span*.21)],
+              fill=fill)
+    d.ellipse((cx-span*.13,cy-span*.13,cx+span*.13,cy+span*.13),fill='#FFF8CE')
+star(995,488,25)
+star(56,486,17)
 # The three short rounded orange bursts on each side are from yesterday's
 # design language, but kept OUTSIDE the approved educational letter panel.
 # Keep the top logo area uniformly bright to prevent a pasted-header rectangle.
@@ -153,7 +188,7 @@ top_d=ImageDraw.Draw(cover)
 for yy in range(0,178):
     amt=1.0 if yy<=104 else ((178-yy)/74.0)**2
     old=cover.crop((0,yy,W,yy+1))
-    row=Image.blend(old,Image.new('RGB',(W,1),(255,248,241)),amt)
+    row=Image.blend(old,Image.new('RGB',(W,1),(253,237,226)),amt)
     cover.paste(row,(0,yy))
 d=ImageDraw.Draw(cover)
 def ray(a,b,width=13):
