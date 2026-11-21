@@ -17,6 +17,7 @@ jobs:
           mkdir -p /tmp/ba-v7 writing-campaign-2026-11-21/preview
           curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/yoTvuykpKGLOWlbB' -o /tmp/ba-v7/blank-board.png
           curl -fLsS --retry 3 --max-time 120 'https://babaalef.com/fonts/vazirmatn-extrabold.ttf' -o /tmp/ba-v7/ui.ttf
+          curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/xIP3TywpRbFtXkSW' -o /tmp/ba-v7/teacher-mascot.jpeg
           python -m pip install --quiet pillow fonttools uharfbuzz imageio-ffmpeg
       - name: Verify locked sources and composite actual WebP animation frames
         run: |
@@ -24,7 +25,7 @@ jobs:
           cat >/tmp/ba-v7/render.py <<'PY'
           import hashlib, json, subprocess, tempfile
           from pathlib import Path
-          from PIL import Image, ImageDraw, ImageFont, features
+          from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageFilter, features
           from fontTools.ttLib import TTFont
           assert features.check('raqm'), 'Persian typography requires RAQM'
           ROOT=Path('writing-campaign-2026-11-21')
@@ -106,20 +107,74 @@ jobs:
               z=base.copy().convert('RGBA')
               z.alpha_composite(frame,(int(x),int(y)))
               return z.convert('RGB')
-          # 1: intro. Final frame is directly taken from the approved transparent V7 animation.
+          # 1: introductory poster. The teacher mascot is the EXACT user-uploaded bitmap
+          # with the photographic white backing separated; this is NOT regenerated.
           hero,hero_ms,hero_size=scaled_frames('uni0634.isol',780,633)
-          cover=BASE.copy()
-          headline(cover,'نوشتن فارسی، قدم به قدم','حرکت قلم را ببین؛ بعد خودت بنویس')
+          cover=Image.new('RGB',(W,H),'#FFF7F0')
+          px=cover.load()
+          for yy in range(H):
+              f=yy/(H-1)
+              col=(int(255*(1-f)+255*f),int(248*(1-f)+244*f),int(239*(1-f)+228*f))
+              ImageDraw.Draw(cover).line((0,yy,W,yy),fill=col,width=1)
           d=ImageDraw.Draw(cover)
-          guide(d,875,230,915)
-          cover=composite(cover,hero[-1],(W-hero_size[0])//2,435)
+          # Keep the exact approved logo/header, blended into the matching cream tone.
+          logo=BASE.crop((245,3,845,132)).convert('RGB')
+          lm=Image.new('L',logo.size,0);md=ImageDraw.Draw(lm);md.rounded_rectangle((15,2,logo.width-15,logo.height-3),radius=31,fill=255)
+          lm=lm.filter(ImageFilter.GaussianBlur(15))
+          cover.paste(logo,(240,0),lm)
+          # Editorial hierarchy from the previously approved custom-font campaign.
+          fittext(d,(540,225),'نوشتن فارسی',91,950,NAVY)
+          d.rounded_rectangle((125,283,955,377),radius=43,fill='#FFE04B')
+          fittext(d,(540,329),'با انیمیشن، ساده‌تر می‌شود!',70,790,NAVY)
+          fittext(d,(540,427),'حرکت قلم را ببین، نوشتن را یاد بگیر',40,900,TEAL)
+          # Whiteboard is a large brand-standard white panel, not generated lettering.
+          for n,fill in [(17,'#E6C36B'),(9,'#FFE17A'),(0,'#EAA21F')]:
+              d.rounded_rectangle((64+n,557+n,757+n,1123+n),radius=55,fill=fill)
+          d.rounded_rectangle((79,564,776,1131),radius=49,fill='#FFC429',outline='#E99318',width=6)
+          d.rounded_rectangle((100,588,758,1106),radius=42,fill='#FFFEFD',outline='#FDE2AB',width=3)
+          # Actual glossy blue board clip (brand styling only).
+          d.rounded_rectangle((342,540,524,620),radius=27,fill='#006CBB')
+          d.rounded_rectangle((350,534,517,603),radius=25,fill='#00C6EF',outline='#0E8DD2',width=5)
+          d.rounded_rectangle((388,516,482,560),radius=17,fill='#07B9EC',outline='#058FE3',width=4)
+          d.arc((369,545,494,589),200,325,fill='#BDFBFF',width=8)
+          fittext(d,(407,652),'یک حرف، یک مسیر واقعی قلم',31,556,NAVY)
+          # The educational content is byte-for-byte sourced from V7 Transparent.
+          # y=245 is the handwritten font baseline in the native 640x520 source canvas.
+          cv,_,cvsize=scaled_frames('uni0634.isol',505,411)
+          bx,by=77,684
+          baseline=by+round(cvsize[1]*245/520)
+          d.line((128,baseline,599,baseline),fill=GUIDE,width=3)
+          d.line((128,baseline+1,599,baseline+1),fill='#E8E4F2',width=1)
+          cover=composite(cover,cv[-1],bx,by)
           d=ImageDraw.Draw(cover)
-          fittext(d,(630,1110),'تمرین نوشتن با بابا الف',30,560,TEAL)
-          cover.save(OUT/'01-cover.jpg',quality=94,subsampling=0,optimize=True)
+          fittext(d,(396,1082),'نمونه انیمیشن حرف «ش»',28,530,TEAL)
+          # Remove only white photographic background from the actual uploaded mascot.
+          mascot_rgb=Image.open('/tmp/ba-v7/teacher-mascot.jpeg').convert('RGB')
+          diff=ImageChops.difference(mascot_rgb,Image.new('RGB',mascot_rgb.size,'white'))
+          channels=diff.split()
+          mag=ImageChops.lighter(ImageChops.lighter(channels[0],channels[1]),channels[2])
+          alpha=mag.point(lambda v:0 if v<9 else (255 if v>=42 else int((v-9)*255/33)))
+          mascot=mascot_rgb.copy().convert('RGBA');mascot.putalpha(alpha)
+          b=alpha.point(lambda a:255 if a>50 else 0).getbbox()
+          assert b is not None
+          mascot=mascot.crop((max(0,b[0]-3),max(0,b[1]-3),min(mascot.width,b[2]+3),min(mascot.height,b[3]+3)))
+          mascot.thumbnail((545,790),Image.Resampling.LANCZOS)
+          mx,my=W-mascot.width-2,542
+          cover_rgba=cover.convert('RGBA')
+          cover_rgba.alpha_composite(mascot,(mx,my))
+          cover=cover_rgba.convert('RGB')
+          d=ImageDraw.Draw(cover)
+          d.line((255,1300,375,1300),fill='#09BDAA',width=7)
+          d.line((713,1300,839,1300),fill='#09BDAA',width=7)
+          d.text((544,1300),'babaalef.com',font=font(54,UI),fill=NAVY,anchor='mm',direction='ltr')
+          cover.save(OUT/'01-cover.jpg',quality=95,subsampling=0,optimize=True)
+          audit['cover_teacher_mascot_sha256']=sha('/tmp/ba-v7/teacher-mascot.jpeg')
+          audit['native_handwriting_baseline_y']=245
+          audit['hero_final_baseline_y']=baseline
           # 2: hero animated Shin, exactly the original WebP frames over fixed background.
           hero_board=BASE.copy()
           headline(hero_board,'حرکت نوشتن «ش»','دقیقاً همان انیمیشن درس‌ها')
-          d=ImageDraw.Draw(hero_board);guide(d,875,230,915)
+          d=ImageDraw.Draw(hero_board);guide(d,435+round(hero_size[1]*245/520),230,915)
           fittext(d,(650,1095),'از اولین حرکت تا آخرین نقطه',26,500,TEAL)
           # 3: four independent isolated letters from four different letter families.
           quartet=[('uni0628.isol',(195,457)),('uni062C.isol',(552,457)),('uni0633.isol',(195,760)),('uni0645.isol',(552,760))]
@@ -128,25 +183,13 @@ jobs:
           dr=ImageDraw.Draw(grid)
           dr.line((540,440,540,1044),fill='#E0DFE6',width=2)
           dr.line((182,735,903,735),fill='#E0DFE6',width=2)
-          for x,y in [(195,457),(552,457),(195,760),(552,760)]:
-              guide(dr,y+230,x+50,x+330)
+          for row_y in (457,760):
+              row_baseline=row_y+round(268*245/520)
+              guide(dr,row_baseline,235,887)
           grid_frames={}
           for key,origin in quartet:
               fs,ds,size=scaled_frames(key,330,268)
               grid_frames[key]=(fs,ds,size,origin)
-          # 4: writing practice invitation; locked font for educational letter examples.
-          outro=BASE.copy()
-          headline(outro,'حالا نوبت تمرین توست!','با انگشت، قلم یا روی کاغذ')
-          dr=ImageDraw.Draw(outro)
-          for y in (580,855):guide(dr,y,255,917)
-          # Use the locked original font, not generated letter artwork.
-          x_positions=[810,638,466,294]
-          for x,s in zip(x_positions,['ش','ج','ب','م']):
-              g=glyph(s,x,570,155)
-              outro=Image.alpha_composite(outro.convert('RGBA'),g).convert('RGB')
-          dr=ImageDraw.Draw(outro)
-          fittext(dr,(590,940),'اول ببین، بعد بنویس',38,650,TEAL)
-          outro.save(OUT/'04-practice.jpg',quality=94,subsampling=0,optimize=True)
           def frame_at(arr,durations,t):
               # Frame selection is based on ORIGINAL duration, without changing stroke timing/order.
               elapsed=int(t*1000)
@@ -185,11 +228,11 @@ jobs:
               return z.convert('RGB')
           render_video('03-four-families',7.5,grid_make)
           # Contact sheet for manual visual QA at start / midpoint / completion.
-          thumbs=[Image.open(OUT/'01-cover.jpg').resize((360,450)),hero_make(2.5).resize((360,450)),grid_make(3.5).resize((360,450)),Image.open(OUT/'04-practice.jpg').resize((360,450))]
-          sheet=Image.new('RGB',(1440,450),'#FFFFFF')
+          thumbs=[Image.open(OUT/'01-cover.jpg').resize((360,450)),hero_make(2.5).resize((360,450)),grid_make(3.5).resize((360,450))]
+          sheet=Image.new('RGB',(1080,450),'#FFFFFF')
           for i,im in enumerate(thumbs):sheet.paste(im,(360*i,0))
           sheet.save(OUT/'00-contact-sheet.jpg',quality=90,optimize=True)
-          audit['outputs']=['01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif','04-practice.jpg']
+          audit['outputs']=['01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif']
           (OUT/'verification.json').write_text(json.dumps(audit,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
           PY
           python /tmp/ba-v7/render.py 2>&1 | tee /tmp/ba-v7/render.log
@@ -199,7 +242,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add writing-campaign-2026-11-21/preview/
           git diff --cached --quiet && exit 0
-          git commit -m 'Preview actual locked V7 handwriting animations on approved board'
+          git commit -m 'Render three-slide writing campaign with teacher mascot and corrected native baselines'
           git pull --rebase origin main
           git push
 
