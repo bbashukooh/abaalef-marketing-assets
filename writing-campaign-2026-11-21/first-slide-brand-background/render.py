@@ -120,7 +120,7 @@ hero,hero_ms,hero_size=scaled_frames('uni0634.isol',780,633)
 # not character generation and not modification of the locked V7 ink.
 cover=Image.new('RGB',(W,H),(255,247,239))
 bg_d=ImageDraw.Draw(cover)
-top=(255,247,240);bottom=(255,238,221)
+top=(255,250,244);bottom=(255,244,232)
 for yy in range(H):
     amount=yy/(H-1)
     bg_d.line((0,yy,W,yy),fill=tuple(round(top[k]*(1-amount)+bottom[k]*amount) for k in range(3)),width=1)
@@ -136,15 +136,22 @@ def backdrop_glow(cx,cy,rx,ry,rgb,alpha,blur):
     ld.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=tuple(rgb)+(alpha,))
     cover=Image.alpha_composite(cover.convert('RGBA'),layer.filter(ImageFilter.GaussianBlur(blur))).convert('RGB')
 # Soft watercolor-like atmosphere from the previously approved poster.
-backdrop_glow(75,195,330,310,(255,174,96),115,150)
-backdrop_glow(1040,245,330,340,(255,192,113),125,155)
-backdrop_glow(560,475,490,160,(255,220,134),65,105)
-backdrop_glow(-10,785,260,390,(65,206,171),80,125)
-backdrop_glow(1015,825,305,450,(86,217,167),92,135)
-backdrop_glow(560,1270,515,245,(255,201,124),100,145)
-backdrop_glow(110,1190,235,260,(77,208,171),73,95)
+backdrop_glow(75,195,330,310,(255,217,181),80,150)
+backdrop_glow(1040,245,330,340,(255,222,185),80,155)
+backdrop_glow(560,475,490,160,(255,237,207),35,105)
+backdrop_glow(-10,785,260,390,(197,244,223),82,125)
+backdrop_glow(1015,825,305,450,(185,243,219),86,135)
+backdrop_glow(560,1270,515,245,(255,225,186),86,145)
+backdrop_glow(110,1190,235,260,(187,239,215),70,95)
 # The three short rounded orange bursts on each side are from yesterday's
 # design language, but kept OUTSIDE the approved educational letter panel.
+# Keep the top logo area uniformly bright to prevent a pasted-header rectangle.
+top_d=ImageDraw.Draw(cover)
+for yy in range(0,178):
+    amt=1.0 if yy<=104 else ((178-yy)/74.0)**2
+    old=cover.crop((0,yy,W,yy+1))
+    row=Image.blend(old,Image.new('RGB',(W,1),(255,248,241)),amt)
+    cover.paste(row,(0,yy))
 d=ImageDraw.Draw(cover)
 def ray(a,b,width=13):
     d.line((*a,*b),fill=brand_palette['orange_bursts'],width=width)
