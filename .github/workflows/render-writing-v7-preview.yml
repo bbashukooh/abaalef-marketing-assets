@@ -154,8 +154,8 @@ jobs:
           # Editorial hierarchy from the previously approved custom-font campaign.
           fittext(d,(540,225),'بابا الف، نوشتن فارسی را',76,950,NAVY)
           d.rounded_rectangle((125,283,955,377),radius=43,fill='#FFE04B')
-          fittext(d,(540,329),'با دیدن حرکت قلم، آسان‌تر!',68,790,NAVY)
-          fittext(d,(540,427),'بابا الف نوشتن هر حرف را قدم‌به‌قدم نشان می‌دهد',39,930,TEAL)
+          fittext(d,(540,329),'با نمایش حرکت قلم یاد می‌دهد!',64,790,NAVY)
+          fittext(d,(540,427),'مسیر هر حرف، از اولین حرکت تا آخرین نقطه',39,930,TEAL)
           # Whiteboard is a large brand-standard white panel, not generated lettering.
           for n,fill in [(17,'#E6C36B'),(9,'#FFE17A'),(0,'#EAA21F')]:
               d.rounded_rectangle((64+n,557+n,757+n,1123+n),radius=55,fill=fill)
@@ -168,7 +168,7 @@ jobs:
           d.arc((369,545,494,589),200,325,fill='#BDFBFF',width=8)
           fittext(d,(407,652),'یک حرف، یک مسیر واقعی قلم',31,556,NAVY)
           # The educational content is byte-for-byte sourced from V7 Transparent.
-          # y=245 is the handwritten font baseline in the native 640x520 source canvas.
+          # Font y=0 is mapped to the exact per-form baseline from locked outlines.
           cv,cv_ms,cvsize=scaled_frames('uni0635.medi',505,411)
           bx=77
           baseline=866
