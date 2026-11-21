@@ -27,7 +27,7 @@ jobs:
           gs=tt.getGlyphSet()
           # Font y=0 = designed baseline; pixel transform is fitted per glyph.
           results=[]
-          for glyph in ['uni0634.isol','uni0628.isol','uni062C.isol','uni0633.isol','uni0645.isol']:
+          for glyph in ['uni0635.medi','uni0634.isol','uni0645.isol','uni0638.fina','uni063A.fina','uni0647.init']:
               pen=BoundsPen(gs);gs[glyph].draw(pen)
               a,b,c,d=map(float,pen.bounds)
               with Image.open(root/'source'/(glyph+'.webp')) as anim:
@@ -47,6 +47,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add writing-campaign-2026-11-21/analysis/baseline-analysis.json
           git diff --cached --quiet && exit 0
-          git commit -m 'Audit true individual glyph baselines from locked font outlines'
+          git commit -m 'Audit exact baselines for new medial and final glyph selections'
           git pull --rebase origin main
           git push
