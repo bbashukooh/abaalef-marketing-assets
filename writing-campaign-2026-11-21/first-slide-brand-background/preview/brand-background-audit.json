@@ -1,0 +1,133 @@
+{
+  "font_sha256": "33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78",
+  "template_sha256": "4731114e48192a418bb84e1640a61a918f9f136d137decd8f6acddf83544d3d9",
+  "reference_commit": "d1b85797308fd335f3abf2a07e0c3cf557b2e19d",
+  "animations": {
+    "uni0635.medi": {
+      "sha256": "70934051a2c578911f5986dff717a9b23f6d0e645d65aae89d7c03418a8c072c",
+      "frame_count": 66,
+      "duration_ms": 6270,
+      "observed_duration_ms": 5510,
+      "visible_bbox": [
+        42,
+        172,
+        598,
+        348
+      ]
+    },
+    "uni0634.isol": {
+      "sha256": "a35b1d9bcdd0c57b2f02efc0b07e8ff0573fbe3d285c6e99f82328c38a4c921d",
+      "frame_count": 76,
+      "duration_ms": 7220,
+      "observed_duration_ms": 5795,
+      "visible_bbox": [
+        100,
+        50,
+        540,
+        470
+      ]
+    },
+    "uni0645.isol": {
+      "sha256": "005e76669075fb24343724ecb612fbc29ecaf1116e75f6789c09abec6bf82444",
+      "frame_count": 56,
+      "duration_ms": 5320,
+      "observed_duration_ms": 4465,
+      "visible_bbox": [
+        164,
+        50,
+        476,
+        470
+      ]
+    },
+    "uni0638.fina": {
+      "sha256": "e2db2d69217906081969068f42ee941f269c98d85ae3a59c321fb029be11a61d",
+      "frame_count": 88,
+      "duration_ms": 8360,
+      "observed_duration_ms": 7125,
+      "visible_bbox": [
+        65,
+        50,
+        575,
+        470
+      ]
+    },
+    "uni063A.fina": {
+      "sha256": "64e46f1902f315677a2dd00f7a517ee16347ea0ac64b2a3adf59a4440d4ad629",
+      "frame_count": 61,
+      "duration_ms": 5795,
+      "observed_duration_ms": 4560,
+      "visible_bbox": [
+        174,
+        50,
+        466,
+        470
+      ]
+    },
+    "uni0647.init": {
+      "sha256": "41d36c3faa81a91832ef44097adae906498d324d210b0b4ca4c2d099f2cd60e9",
+      "frame_count": 71,
+      "duration_ms": 6745,
+      "observed_duration_ms": 5985,
+      "visible_bbox": [
+        89,
+        113,
+        551,
+        407
+      ]
+    }
+  },
+  "true_baseline_native_pixels": {
+    "uni0635.medi": 325.73279352226723,
+    "uni0634.isol": 288.37837837837833,
+    "uni0645.isol": 74.70588235294116,
+    "uni0638.fina": 446.536312849162,
+    "uni063A.fina": 259.34997503744387,
+    "uni0647.init": 379.5049567973984
+  },
+  "computed_native_baselines": {
+    "uni0635.medi": 325.73279352226723,
+    "uni0634.isol": 288.37837837837833,
+    "uni0645.isol": 74.70588235294116,
+    "uni0638.fina": 446.536312849162,
+    "uni063A.fina": 259.34997503744387,
+    "uni0647.init": 379.5049567973984
+  },
+  "cover_teacher_mascot_sha256": "84fa3c680f23110b5b6558119add26730758c96c16fd20d048f7b93c7e00aa07",
+  "native_handwriting_baseline_y": {
+    "uni0635.medi": 325.73279352226723,
+    "uni0634.isol": 288.37837837837833,
+    "uni0645.isol": 74.70588235294116,
+    "uni0638.fina": 446.536312849162,
+    "uni063A.fina": 259.34997503744387,
+    "uni0647.init": 379.5049567973984
+  },
+  "hero_final_baseline_y": 866,
+  "brand_palette": {
+    "cream_top": "#FFF7F0",
+    "warm_peach_bottom": "#FFEEDD",
+    "orange_bursts": "#FF9618",
+    "golden_glow": "#FFD66A",
+    "warm_sunlight": "#FFB26C",
+    "mint": "#54D7B5",
+    "turquoise": "#00BFAE",
+    "headline_gold": "#FFE04B"
+  },
+  "change_scope": "background gradients, peach/mint washes, orange decorative rays ONLY",
+  "unchanged": [
+    "original V7 WebP source",
+    "handwriting baseline, placement and scale",
+    "all text labels",
+    "teacher mascot original file",
+    "board and logo foreground",
+    "other carousel slides"
+  ],
+  "outputs": [
+    "01-introduction-brand-background.mp4",
+    "01-introduction-brand-background-preview.gif",
+    "01-cover.jpg",
+    "01-start.jpg",
+    "01-middle.jpg",
+    "01-end.jpg",
+    "00-background-comparison.jpg"
+  ]
+}
