@@ -1,0 +1,7 @@
+VERIFIED locked font SHA256 33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78
+Approved blank board size/hash (1092, 1440) 4731114e48192a418bb84e1640a61a918f9f136d137decd8f6acddf83544d3d9
+Traceback (most recent call last):
+  File "/tmp/ba-v7/render.py", line 56, in <module>
+    assert getattr(a,'n_frames',0)==n,(name,a.n_frames,n)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('uni0634.isol', 61, 76)
