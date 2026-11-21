@@ -173,7 +173,7 @@ jobs:
           bx=77
           baseline=866
           by=round(baseline-cvsize[1]*native_baseline('uni0635.medi')/520)
-          baseline=scaled_line_y('uni0634.isol',by,cvsize[1])
+          assert abs(scaled_line_y('uni0635.medi',by,cvsize[1])-baseline)<=1
           d.line((128,baseline,599,baseline),fill=GUIDE,width=3)
           d.line((128,baseline+1,599,baseline+1),fill='#E8E4F2',width=1)
           # No fixed glyph is pasted here: the authentic V7 animation is composited frame by frame.
@@ -202,7 +202,7 @@ jobs:
           cover_preview=composite(cover_background,cv[-1],bx,by)
           cover_preview.save(OUT/'01-cover.jpg',quality=95,subsampling=0,optimize=True)
           audit['cover_teacher_mascot_sha256']=sha('/tmp/ba-v7/teacher-mascot.jpeg')
-          audit['native_handwriting_baseline_y']=true_baselines['uni0634.isol']
+          audit['native_handwriting_baseline_y']=baseline_table
           audit['hero_final_baseline_y']=baseline
           # 2: hero animated Shin, exactly the original WebP frames over fixed background.
           hero_board=BASE.copy()
@@ -272,18 +272,15 @@ jobs:
               previews[0].save(OUT/(stem+'-preview.gif'),save_all=True,append_images=previews[1:],duration=200,loop=0,optimize=True,disposal=2)
               print('RENDERED',stem,'duration',duration,'size', (OUT/(stem+'.mp4')).stat().st_size)
           def cover_make(t):
-              return composite(cover_base,frame_at(cv,cv_ms,t),bx,by)
+              return composite(cover_background,frame_at(cv,cv_ms,t),bx,by)
           render_video('01-introduction-animation',8.0,cover_make)
           def hero_make(t):
               x=(W-hero_size[0])//2
               return composite(hero_board,frame_at(hero,hero_ms,t),x,435)
-          def cover_make(t):
-              return composite(cover_background,frame_at(cv,hero_ms,t),bx,by)
-          render_video('01-intro',8.0,cover_make)
           render_video('02-shin-animation',8.0,hero_make)
           def grid_make(t):
               z=grid.copy().convert('RGBA')
-              for key,origin in quartet:
+              for key in grid_frames:
                   fs,ds,size,(x,y)=grid_frames[key]
                   z.alpha_composite(frame_at(fs,ds,t),(x,y))
               return z.convert('RGB')
@@ -293,7 +290,7 @@ jobs:
           sheet=Image.new('RGB',(1080,450),'#FFFFFF')
           for i,im in enumerate(thumbs):sheet.paste(im,(360*i,0))
           sheet.save(OUT/'00-contact-sheet.jpg',quality=90,optimize=True)
-          audit['outputs']=['01-intro.mp4','01-intro-preview.gif','01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif']
+          audit['outputs']=['01-introduction-animation.mp4','01-introduction-animation-preview.gif','01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif']
           (OUT/'verification.json').write_text(json.dumps(audit,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
           PY
           python /tmp/ba-v7/render.py 2>&1 | tee /tmp/ba-v7/render.log
