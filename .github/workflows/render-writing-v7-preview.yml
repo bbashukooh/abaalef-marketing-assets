@@ -28,21 +28,25 @@ jobs:
           from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageFilter, features
           from fontTools.ttLib import TTFont
           from fontTools.pens.boundsPen import BoundsPen
+          from fontTools.pens.boundsPen import BoundsPen
           assert features.check('raqm'), 'Persian typography requires RAQM'
           ROOT=Path('writing-campaign-2026-11-21')
           SOURCE=ROOT/'source'
           OUT=ROOT/'preview'
           OUT.mkdir(parents=True, exist_ok=True)
           EXPECTED={
+              'uni0635.medi':('70934051a2c578911f5986dff717a9b23f6d0e645d65aae89d7c03418a8c072c',66,6270),
               'uni0634.isol':('a35b1d9bcdd0c57b2f02efc0b07e8ff0573fbe3d285c6e99f82328c38a4c921d',76,7220),
-              'uni0628.isol':('1c225c3c51379cd392f56a3bbfe7f7273bd066d1ed7ee2452ce43a3a8a8eae6f',51,4845),
-              'uni062C.isol':('56b17c0cd31fa1b069b9046bacb294af8a560b039ec00c3025e42563c968c1eb',69,6555),
-              'uni0633.isol':('032f419045a8cf49ac7dae00a030bdbe1064a5a1d2c7f0d7ff4ff06be45e94dc',67,6365),
-              'uni0645.isol':('005e76669075fb24343724ecb612fbc29ecaf1116e75f6789c09abec6bf82444',56,5320)
+              'uni0645.isol':('005e76669075fb24343724ecb612fbc29ecaf1116e75f6789c09abec6bf82444',56,5320),
+              'uni0638.fina':('e2db2d69217906081969068f42ee941f269c98d85ae3a59c321fb029be11a61d',88,8360),
+              'uni063A.fina':('64e46f1902f315677a2dd00f7a517ee16347ea0ac64b2a3adf59a4440d4ad629',61,5795),
+              'uni0647.init':('41d36c3faa81a91832ef44097adae906498d324d210b0b4ca4c2d099f2cd60e9',71,6745)
           }
           fontpath=SOURCE/'BabaAlef-Font-v1.0.2.ttf'
           sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
           assert sha(fontpath)=='33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78'
+          lockedfont=TTFont(fontpath)
+          glyph_set=lockedfont.getGlyphSet()
           print('VERIFIED locked font SHA256',sha(fontpath))
           im=Image.open('/tmp/ba-v7/blank-board.png')
           print('Approved blank board size/hash',im.size,sha('/tmp/ba-v7/blank-board.png'))
@@ -108,6 +112,20 @@ jobs:
           audit['true_baseline_native_pixels']=true_baselines
           def scaled_line_y(name,origin_y,scaled_height):
               return round(origin_y+true_baselines[name]*scaled_height/520)
+          def native_baseline(key):
+              # Convert y=0 of the locked course font to the V7 bitmap's 640x520 pixel canvas.
+              # Critically each glyph's vertical positioning differs, and no constant is valid.
+              _,_,bbox=seqs[key]
+              pen=BoundsPen(glyph_set);glyph_set[key].draw(pen)
+              assert pen.bounds is not None
+              x_min,y_min,x_max,y_max=pen.bounds
+              sx=(bbox[2]-bbox[0])/(x_max-x_min)
+              sy=(bbox[3]-bbox[1])/(y_max-y_min)
+              assert abs(sx-sy)/max(sx,sy)<.085,(key,sx,sy)
+              return bbox[3]+y_min*sy
+          baseline_table={k:native_baseline(k) for k in EXPECTED}
+          audit['computed_native_baselines']=baseline_table
+          print('LOCKED-FONT BASELINES:',baseline_table)
           def scaled_frames(key,maxwidth,maxheight):
               frames,durations,bbox=seqs[key]
               # Scale the original entire 640x520 canvas as a unit; never redraw, crop or transform strokes.
@@ -134,7 +152,7 @@ jobs:
           lm=lm.filter(ImageFilter.GaussianBlur(15))
           cover.paste(logo,(240,0),lm)
           # Editorial hierarchy from the previously approved custom-font campaign.
-          fittext(d,(540,225),'نوشتن فارسی',91,950,NAVY)
+          fittext(d,(540,225),'بابا الف، نوشتن فارسی را',76,950,NAVY)
           d.rounded_rectangle((125,283,955,377),radius=43,fill='#FFE04B')
           fittext(d,(540,329),'با دیدن حرکت قلم، آسان‌تر!',68,790,NAVY)
           fittext(d,(540,427),'بابا الف نوشتن هر حرف را قدم‌به‌قدم نشان می‌دهد',39,930,TEAL)
@@ -151,15 +169,16 @@ jobs:
           fittext(d,(407,652),'یک حرف، یک مسیر واقعی قلم',31,556,NAVY)
           # The educational content is byte-for-byte sourced from V7 Transparent.
           # y=245 is the handwritten font baseline in the native 640x520 source canvas.
-          cv,_,cvsize=scaled_frames('uni0634.isol',505,411)
-          bx,by=77,684
-          baseline=by+round(cvsize[1]*245/520)
+          cv,cv_ms,cvsize=scaled_frames('uni0635.medi',505,411)
+          bx=77
+          baseline=866
+          by=round(baseline-cvsize[1]*native_baseline('uni0635.medi')/520)
           baseline=scaled_line_y('uni0634.isol',by,cvsize[1])
           d.line((128,baseline,599,baseline),fill=GUIDE,width=3)
           d.line((128,baseline+1,599,baseline+1),fill='#E8E4F2',width=1)
           # No fixed glyph is pasted here: the authentic V7 animation is composited frame by frame.
           d=ImageDraw.Draw(cover)
-          fittext(d,(396,1082),'نمونه انیمیشن حرف «ش»',28,530,TEAL)
+          fittext(d,(396,1082),'نمونهٔ حرکت قلم در شکل وسط حرف',27,530,TEAL)
           # Remove only white photographic background from the actual uploaded mascot.
           mascot_rgb=Image.open('/tmp/ba-v7/teacher-mascot.jpeg').convert('RGB')
           diff=ImageChops.difference(mascot_rgb,Image.new('RGB',mascot_rgb.size,'white'))
@@ -190,30 +209,42 @@ jobs:
           headline(hero_board,'حرکت نوشتن «ش»','دقیقاً همان انیمیشن درس‌ها')
           d=ImageDraw.Draw(hero_board);guide(d,scaled_line_y('uni0634.isol',435,hero_size[1]),230,915)
           fittext(d,(650,1095),'از اولین حرکت تا آخرین نقطه',26,500,TEAL)
-          # 3: four independent isolated letters from four different letter families.
+          # 3: four exact positional forms: right-to-left order M, final Za, final Ghayn, initial Heh.
+          # All original strokes are untouched. Move *complete canvas* for each glyph to align
+          # its own true font y=0 with the shared baseline; never shift the horizontal line instead.
+          quartet=[
+              ('uni0645.isol',715,529,434,725),
+              ('uni0638.fina',355,529,434,725),
+              ('uni063A.fina',715,922,757,1070),
+              ('uni0647.init',355,922,757,1070)
+          ]
           grid=BASE.copy()
-          headline(grid,'چهار خانواده، چهار حرکت','هر حرف با حرکت قلم واقعی خودش')
+          headline(grid,'چهار شکل، چهار حرکت قلم','شکل‌های مختلف حروف را هنگام نوشتن ببین')
           dr=ImageDraw.Draw(grid)
-          dr.line((540,440,540,1095),fill='#E0DFE6',width=2)
-          dr.line((182,755,903,755),fill='#E0DFE6',width=2)
-          # Guidelines are fixed per row; each original V7 canvas is shifted to match its OWN font y=0.
-          target_baselines={'top':555,'bottom':867}
-          for yy in target_baselines.values():
-              guide(dr,yy,235,521)
-              guide(dr,yy,564,887)
-          quartet=[('uni0628.isol',195,'top'),('uni062C.isol',552,'top'),
-                   ('uni0633.isol',195,'bottom'),('uni0645.isol',552,'bottom')]
+          dr.line((540,435,540,1060),fill='#E0DFE6',width=2)
+          dr.line((179,746,903,746),fill='#E0DFE6',width=2)
+          for y in (529,922):
+              guide(dr,y,231,887)
           grid_frames={}
-          audit['grid_alignment']=[]
-          for key,x,row in quartet:
-              fs,ds,size=scaled_frames(key,330,268)
-              y=round(target_baselines[row]-true_baselines[key]*size[1]/520)
+          for key,cx,target_line,top_limit,bottom_limit in quartet:
+              frames,ds,inkbox=seqs[key]
+              ny=native_baseline(key)
+              top_ink=max(0,ny-inkbox[1])
+              bottom_ink=max(0,inkbox[3]-ny)
+              scale=min(295/(inkbox[2]-inkbox[0]),
+                        (target_line-top_limit)/max(top_ink,1),
+                        (bottom_limit-target_line)/max(bottom_ink,1),
+                        .86)
+              assert .22<scale<=.86,(key,scale,top_ink,bottom_ink)
+              size=(round(640*scale),round(520*scale))
+              fs=[fr.resize(size,Image.Resampling.LANCZOS) for fr in frames]
+              x=int(round(cx-(inkbox[0]+inkbox[2])*scale/2))
+              y=int(round(target_line-ny*scale))
+              visual=(x+inkbox[0]*scale,y+inkbox[1]*scale,x+inkbox[2]*scale,y+inkbox[3]*scale)
+              assert visual[1]>=top_limit-2 and visual[3]<=bottom_limit+2,(key,visual)
               grid_frames[key]=(fs,ds,size,(x,y))
-              actual_line=scaled_line_y(key,y,size[1])
-              # A rounding difference of at most 1 px is acceptable; draw the same row guideline.
-              assert abs(actual_line-target_baselines[row])<=1,(key,row,actual_line)
-              audit['grid_alignment'].append({'glyph':key,'row':row,'origin_y':y,
-                  'target_baseline':target_baselines[row],'computed_baseline':actual_line})
+              audit.setdefault('four_form_placements',{})[key]={'center_x':cx,'shared_baseline_y':target_line,'native_baseline_y':ny,'scale':scale,'visual_box':visual}
+              print('GRID PLACEMENT',key,'baseline',target_line,'scale',scale,'visual',visual)
           def frame_at(arr,durations,t):
               # Frame selection is based on ORIGINAL duration, without changing stroke timing/order.
               elapsed=int(t*1000)
@@ -240,6 +271,9 @@ jobs:
                   subprocess.run(args,check=True)
               previews[0].save(OUT/(stem+'-preview.gif'),save_all=True,append_images=previews[1:],duration=200,loop=0,optimize=True,disposal=2)
               print('RENDERED',stem,'duration',duration,'size', (OUT/(stem+'.mp4')).stat().st_size)
+          def cover_make(t):
+              return composite(cover_base,frame_at(cv,cv_ms,t),bx,by)
+          render_video('01-introduction-animation',8.0,cover_make)
           def hero_make(t):
               x=(W-hero_size[0])//2
               return composite(hero_board,frame_at(hero,hero_ms,t),x,435)
