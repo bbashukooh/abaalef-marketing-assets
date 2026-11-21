@@ -1,0 +1,52 @@
+name: Audit true locked-font baselines for handwriting carousel
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-locked-font-baselines.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow fonttools
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          from fontTools.ttLib import TTFont
+          from fontTools.pens.boundsPen import BoundsPen
+          root=Path('writing-campaign-2026-11-21')
+          out=root/'analysis'
+          out.mkdir(parents=True,exist_ok=True)
+          tt=TTFont(root/'source'/'BabaAlef-Font-v1.0.2.ttf')
+          gs=tt.getGlyphSet()
+          # Font y=0 = designed baseline; pixel transform is fitted per glyph.
+          results=[]
+          for glyph in ['uni0634.isol','uni0628.isol','uni062C.isol','uni0633.isol','uni0645.isol']:
+              pen=BoundsPen(gs);gs[glyph].draw(pen)
+              a,b,c,d=map(float,pen.bounds)
+              with Image.open(root/'source'/(glyph+'.webp')) as anim:
+                  anim.seek(anim.n_frames-1)
+                  img=anim.convert('RGBA')
+              bbox=img.getchannel('A').getbbox()
+              # pixel image bounds include final colored writing tip, while font raster image is invariant.
+              im_scale_y=(bbox[3]-bbox[1])/(d-b)
+              im_scale_x=(bbox[2]-bbox[0])/(c-a)
+              baseline=bbox[3]+b*im_scale_y
+              y_zero_normalized=(0-b)/(d-b)
+              results.append({'glyph':glyph,'font_bounds':[a,b,c,d],'ink_bounds':bbox,'scale_x':im_scale_x,'scale_y':im_scale_y,'baseline_y':baseline,'line_fraction_from_top':(baseline-bbox[1])/(bbox[3]-bbox[1]),'baseline_formula':'(pixelBottom + minFontY * measuredVerticalScale)'})
+          (out/'baseline-analysis.json').write_text(json.dumps(results,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(results,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/analysis/baseline-analysis.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Audit true individual glyph baselines from locked font outlines'
+          git pull --rebase origin main
+          git push
