@@ -1,0 +1,200 @@
+name: Preview locked Baba Alef writing carousel
+on:
+  push:
+    paths:
+      - '.github/workflows/render-writing-v7-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get previously approved unmodified empty board
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ba-v7 writing-campaign-2026-11-21/preview
+          curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/yoTvuykpKGLOWlbB' -o /tmp/ba-v7/blank-board.png
+          curl -fLsS --retry 3 --max-time 120 'https://babaalef.com/fonts/vazirmatn-extrabold.ttf' -o /tmp/ba-v7/ui.ttf
+          python -m pip install --quiet pillow fonttools uharfbuzz
+      - name: Verify locked sources and composite actual WebP animation frames
+        run: |
+          set -euo pipefail
+          cat >/tmp/ba-v7/render.py <<'PY'
+          import hashlib, json, subprocess, tempfile
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont, features
+          from fontTools.ttLib import TTFont
+          assert features.check('raqm'), 'Persian typography requires RAQM'
+          ROOT=Path('writing-campaign-2026-11-21')
+          SOURCE=ROOT/'source'
+          OUT=ROOT/'preview'
+          OUT.mkdir(parents=True, exist_ok=True)
+          EXPECTED={
+              'uni0634.isol':('a35b1d9bcdd0c57b2f02efc0b07e8ff0573fbe3d285c6e99f82328c38a4c921d',76,7220),
+              'uni0628.isol':('1c225c3c51379cd392f56a3bbfe7f7273bd066d1ed7ee2452ce43a3a8a8eae6f',51,4845),
+              'uni062C.isol':('56b17c0cd31fa1b069b9046bacb294af8a560b039ec00c3025e42563c968c1eb',69,6555),
+              'uni0633.isol':('032f419045a8cf49ac7dae00a030bdbe1064a5a1d2c7f0d7ff4ff06be45e94dc',67,6365),
+              'uni0645.isol':('005e76669075fb24343724ecb612fbc29ecaf1116e75f6789c09abec6bf82444',56,5320)
+          }
+          fontpath=SOURCE/'BabaAlef-Font-v1.0.2.ttf'
+          sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+          assert sha(fontpath)=='33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78'
+          print('VERIFIED locked font SHA256',sha(fontpath))
+          im=Image.open('/tmp/ba-v7/blank-board.png')
+          print('Approved blank board size/hash',im.size,sha('/tmp/ba-v7/blank-board.png'))
+          assert im.size==(1092,1440),'Wrong approved board!'
+          W,H=1080,1350
+          BASE=im.convert('RGB').resize((W,H),Image.Resampling.LANCZOS)
+          UI='/tmp/ba-v7/ui.ttf'
+          NAVY='#092343'; TEAL='#008C80'; GUIDE='#C2BFE2'; ORANGE='#F9B62B'
+          def font(size,face=UI):return ImageFont.truetype(str(face),size,layout_engine=ImageFont.Layout.RAQM)
+          def text(d,xy,s,size,color=NAVY,face=UI):
+              d.text(xy,s,font=font(size,face),fill=color,anchor='mm',direction='rtl',language='fa')
+          def fittext(d,xy,s,size,maxwidth,color=NAVY,face=UI):
+              while d.textlength(s,font=font(size,face),direction='rtl')>maxwidth:size-=1
+              text(d,xy,s,size,color,face)
+          def headline(canvas,heading,sub=None):
+              d=ImageDraw.Draw(canvas)
+              fittext(d,(540,302),heading,46,770)
+              if sub:
+                  d.rounded_rectangle((205,341,875,411),radius=31,outline='#44CB70',width=3,fill='#FFFFFF')
+                  fittext(d,(540,376),sub,31,630)
+          def guide(d,y,x0,x1):
+              d.line((x0,y,x1,y),fill=GUIDE,width=3)
+          def glyph(txt,x,y,size):
+              # Render only with the immutable course font, never a generic font.
+              b=Image.new('RGBA',(W,H),(0,0,0,0))
+              d=ImageDraw.Draw(b)
+              d.text((x,y),txt,font=font(size,fontpath),fill=NAVY,anchor='ms',direction='rtl',language='fa')
+              return b
+          seqs={}
+          audit={'font_sha256':sha(fontpath),'template_sha256':sha('/tmp/ba-v7/blank-board.png'),'reference_commit':'d1b85797308fd335f3abf2a07e0c3cf557b2e19d','animations':{}}
+          for name,(digest,n,ms) in EXPECTED.items():
+              p=SOURCE/(name+'.webp')
+              assert sha(p)==digest,f'Locked animation changed: {name}'
+              frames=[]
+              durations=[]
+              with Image.open(p) as a:
+                  assert getattr(a,'n_frames',0)==n,(name,a.n_frames,n)
+                  assert a.size==(640,520)
+                  for i in range(a.n_frames):
+                      a.seek(i)
+                      durations.append(int(a.info.get('duration',95)))
+                      frames.append(a.convert('RGBA').copy())
+              union=None
+              for f in frames:
+                  box=f.getchannel('A').getbbox()
+                  if box:
+                      if union is None:union=box
+                      else:union=(min(union[0],box[0]),min(union[1],box[1]),max(union[2],box[2]),max(union[3],box[3]))
+              print(name,'frames',len(frames),'duration',sum(durations),'nontransparent bbox',union,'alpha max',frames[-1].getchannel('A').getextrema())
+              assert union is not None, 'Missing genuine animated ink'
+              seqs[name]=(frames,durations,union)
+              audit['animations'][name]={'sha256':digest,'frame_count':n,'duration_ms':ms,'observed_duration_ms':sum(durations),'visible_bbox':union}
+          def scaled_frames(key,maxwidth,maxheight):
+              frames,durations,bbox=seqs[key]
+              # Scale the original entire 640x520 canvas as a unit; never redraw, crop or transform strokes.
+              scale=min(maxwidth/640,maxheight/520)
+              w=round(640*scale);h=round(520*scale)
+              return [f.resize((w,h),Image.Resampling.LANCZOS) for f in frames],durations,(w,h)
+          def composite(base,frame,x,y):
+              z=base.copy().convert('RGBA')
+              z.alpha_composite(frame,(int(x),int(y)))
+              return z.convert('RGB')
+          # 1: intro. Final frame is directly taken from the approved transparent V7 animation.
+          hero,hero_ms,hero_size=scaled_frames('uni0634.isol',780,633)
+          cover=BASE.copy()
+          headline(cover,'نوشتن فارسی، قدم به قدم','حرکت قلم را ببین؛ بعد خودت بنویس')
+          d=ImageDraw.Draw(cover)
+          guide(d,875,230,915)
+          cover=composite(cover,hero[-1],(W-hero_size[0])//2,435)
+          d=ImageDraw.Draw(cover)
+          fittext(d,(630,1110),'تمرین نوشتن با بابا الف',30,560,TEAL)
+          cover.save(OUT/'01-cover.jpg',quality=94,subsampling=0,optimize=True)
+          # 2: hero animated Shin, exactly the original WebP frames over fixed background.
+          hero_board=BASE.copy()
+          headline(hero_board,'حرکت نوشتن «ش»','دقیقاً همان انیمیشن درس‌ها')
+          d=ImageDraw.Draw(hero_board);guide(d,875,230,915)
+          fittext(d,(650,1095),'از اولین حرکت تا آخرین نقطه',26,500,TEAL)
+          # 3: four independent isolated letters from four different letter families.
+          quartet=[('uni0628.isol',(195,457)),('uni062C.isol',(552,457)),('uni0633.isol',(195,760)),('uni0645.isol',(552,760))]
+          grid=BASE.copy()
+          headline(grid,'چهار خانواده، چهار حرکت','هر حرف با حرکت قلم واقعی خودش')
+          dr=ImageDraw.Draw(grid)
+          dr.line((540,440,540,1044),fill='#E0DFE6',width=2)
+          dr.line((182,735,903,735),fill='#E0DFE6',width=2)
+          for x,y in [(195,457),(552,457),(195,760),(552,760)]:
+              guide(dr,y+230,x+50,x+330)
+          grid_frames={}
+          for key,origin in quartet:
+              fs,ds,size=scaled_frames(key,330,268)
+              grid_frames[key]=(fs,ds,size,origin)
+          # 4: writing practice invitation; locked font for educational letter examples.
+          outro=BASE.copy()
+          headline(outro,'حالا نوبت تمرین توست!','با انگشت، قلم یا روی کاغذ')
+          dr=ImageDraw.Draw(outro)
+          for y in (580,855):guide(dr,y,255,917)
+          # Use the locked original font, not generated letter artwork.
+          x_positions=[810,638,466,294]
+          for x,s in zip(x_positions,['ش','ج','ب','م']):
+              g=glyph(s,x,570,155)
+              outro=Image.alpha_composite(outro.convert('RGBA'),g).convert('RGB')
+          dr=ImageDraw.Draw(outro)
+          fittext(dr,(590,940),'اول ببین، بعد بنویس',38,650,TEAL)
+          outro.save(OUT/'04-practice.jpg',quality=94,subsampling=0,optimize=True)
+          def frame_at(arr,durations,t):
+              # Frame selection is based on ORIGINAL duration, without changing stroke timing/order.
+              elapsed=int(t*1000)
+              total=sum(durations)
+              if elapsed>=total:return arr[-1]
+              rem=elapsed
+              for f,d in zip(arr,durations):
+                  if rem<d:return f
+                  rem-=d
+              return arr[-1]
+          def render_video(stem,duration,make_frame):
+              fps=10
+              count=round(duration*fps)
+              previews=[]
+              with tempfile.TemporaryDirectory() as tmp:
+                  tmp=Path(tmp)
+                  for i in range(count):
+                      fr=make_frame(i/fps)
+                      if i in (0,count//2,count-1):
+                          fr.save(OUT/(stem+f'-frame-{i:03}.jpg'),quality=89,optimize=True)
+                      fr.save(tmp/(f'{i:04}.png'),compress_level=1)
+                      if i%2==0:previews.append(fr.resize((540,675),Image.Resampling.LANCZOS))
+                  args=['ffmpeg','-y','-loglevel','error','-framerate',str(fps),'-i',str(tmp/'%04d.png'),'-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-movflags','+faststart',str(OUT/(stem+'.mp4'))]
+                  subprocess.run(args,check=True)
+              previews[0].save(OUT/(stem+'-preview.gif'),save_all=True,append_images=previews[1:],duration=200,loop=0,optimize=True,disposal=2)
+              print('RENDERED',stem,'duration',duration,'size', (OUT/(stem+'.mp4')).stat().st_size)
+          def hero_make(t):
+              x=(W-hero_size[0])//2
+              return composite(hero_board,frame_at(hero,hero_ms,t),x,435)
+          render_video('02-shin-animation',8.0,hero_make)
+          def grid_make(t):
+              z=grid.copy().convert('RGBA')
+              for key,origin in quartet:
+                  fs,ds,size,(x,y)=grid_frames[key]
+                  z.alpha_composite(frame_at(fs,ds,t),(x,y))
+              return z.convert('RGB')
+          render_video('03-four-families',7.5,grid_make)
+          # Contact sheet for manual visual QA at start / midpoint / completion.
+          thumbs=[Image.open(OUT/'01-cover.jpg').resize((360,450)),hero_make(2.5).resize((360,450)),grid_make(3.5).resize((360,450)),Image.open(OUT/'04-practice.jpg').resize((360,450))]
+          sheet=Image.new('RGB',(1440,450),'#FFFFFF')
+          for i,im in enumerate(thumbs):sheet.paste(im,(360*i,0))
+          sheet.save(OUT/'00-contact-sheet.jpg',quality=90,optimize=True)
+          audit['outputs']=['01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif','04-practice.jpg']
+          (OUT/'verification.json').write_text(json.dumps(audit,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          PY
+          python /tmp/ba-v7/render.py
+      - name: Archive preview artifacts only (never post automatically)
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/preview/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Preview actual locked V7 handwriting animations on approved board'
+          git push
