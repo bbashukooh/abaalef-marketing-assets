@@ -131,10 +131,13 @@ brand_palette={
     "headline_gold":"#FFE04B"}
 def backdrop_glow(cx,cy,rx,ry,rgb,alpha,blur):
     global cover
-    layer=Image.new('RGBA',(W,H),(0,0,0,0))
-    ld=ImageDraw.Draw(layer)
-    ld.ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=tuple(rgb)+(alpha,))
-    cover=Image.alpha_composite(cover.convert('RGBA'),layer.filter(ImageFilter.GaussianBlur(blur))).convert('RGB')
+    # Blur alpha ONLY; blurring transparent RGB would introduce dark halos.
+    opacity=Image.new('L',(W,H),0)
+    ImageDraw.Draw(opacity).ellipse((cx-rx,cy-ry,cx+rx,cy+ry),fill=alpha)
+    opacity=opacity.filter(ImageFilter.GaussianBlur(blur))
+    layer=Image.new('RGBA',(W,H),tuple(rgb)+(0,))
+    layer.putalpha(opacity)
+    cover=Image.alpha_composite(cover.convert('RGBA'),layer).convert('RGB')
 # Soft watercolor-like atmosphere from the previously approved poster.
 backdrop_glow(75,195,330,310,(255,217,181),80,150)
 backdrop_glow(1040,245,330,340,(255,222,185),80,155)
