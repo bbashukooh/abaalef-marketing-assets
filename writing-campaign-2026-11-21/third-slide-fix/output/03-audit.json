@@ -1,0 +1,163 @@
+{
+  "status": "independent review draft; not published or scheduled",
+  "font": "BabaAlef-Font-v1.0.2.ttf",
+  "font_sha256": "33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78",
+  "original_reference": "BabaAlef-V7-Transparent",
+  "board_sha256": "4731114e48192a418bb84e1640a61a918f9f136d137decd8f6acddf83544d3d9",
+  "definition_of_equal_size": "All 4 glyphs use the same 0.42 final pixels per original font design unit, NOT the same WebP canvas scale or bounding-box height",
+  "common_target_pixels_per_font_unit": 0.42,
+  "no_strokes_redrawn": true,
+  "original_webp_frames_and_timing_used": true,
+  "output_video": "03-four-forms-equal-font-size.mp4",
+  "video_fps": 20,
+  "glyphs": [
+    {
+      "id": "uni063A.fina",
+      "font_outline_units": [
+        54.44444444444444,
+        -386.38461538461536,
+        588.0,
+        384.0
+      ],
+      "native_scale_px_per_font_unit": {
+        "x": 0.5472719700124948,
+        "y": 0.54518222666001
+      },
+      "target_px_per_font_unit": 0.42,
+      "actual_px_per_font_unit": {
+        "x": 0.42071532694710545,
+        "y": 0.41937094358462307
+      },
+      "original_sha256": "64e46f1902f315677a2dd00f7a517ee16347ea0ac64b2a3adf59a4440d4ad629",
+      "frames": 48,
+      "source_webp_duration_ms": 4560,
+      "origin": [
+        159,
+        381
+      ],
+      "pixel_size": [
+        492,
+        400
+      ],
+      "font_baseline_y_in_original_canvas": 259.34997503744387,
+      "aligned_guideline_y": 580,
+      "visual_bounds": [
+        292.7625,
+        419.46153846153845,
+        517.2375,
+        742.5384615384615
+      ]
+    },
+    {
+      "id": "uni0645.isol",
+      "font_outline_units": [
+        54.0,
+        -464.0,
+        417.0,
+        29.0
+      ],
+      "native_scale_px_per_font_unit": {
+        "x": 0.859504132231405,
+        "y": 0.8519269776876268
+      },
+      "target_px_per_font_unit": 0.42,
+      "actual_px_per_font_unit": {
+        "x": 0.4216942148760331,
+        "y": 0.4177718832891247
+      },
+      "original_sha256": "005e76669075fb24343724ecb612fbc29ecaf1116e75f6789c09abec6bf82444",
+      "frames": 47,
+      "source_webp_duration_ms": 4465,
+      "origin": [
+        598,
+        543
+      ],
+      "pixel_size": [
+        314,
+        255
+      ],
+      "font_baseline_y_in_original_canvas": 74.70588235294116,
+      "aligned_guideline_y": 580,
+      "visual_bounds": [
+        678.4625,
+        567.5192307692307,
+        831.5375,
+        773.4807692307693
+      ]
+    },
+    {
+      "id": "uni0647.init",
+      "font_outline_units": [
+        -30.0,
+        -30.03846153846154,
+        477.0,
+        291.1578947368421
+      ],
+      "native_scale_px_per_font_unit": {
+        "x": 0.9112426035502958,
+        "y": 0.9153279427242533
+      },
+      "target_px_per_font_unit": 0.42,
+      "actual_px_per_font_unit": {
+        "x": 0.4186020710059172,
+        "y": 0.42069880444441643
+      },
+      "original_sha256": "41d36c3faa81a91832ef44097adae906498d324d210b0b4ca4c2d099f2cd60e9",
+      "frames": 63,
+      "source_webp_duration_ms": 5985,
+      "origin": [
+        273,
+        856
+      ],
+      "pixel_size": [
+        294,
+        239
+      ],
+      "font_baseline_y_in_original_canvas": 379.5049567973984,
+      "aligned_guideline_y": 1030,
+      "visual_bounds": [
+        313.884375,
+        907.9365384615385,
+        526.115625,
+        1043.0634615384615
+      ]
+    },
+    {
+      "id": "uni0638.fina",
+      "font_outline_units": [
+        54.0,
+        -30.0,
+        708.0,
+        507.0
+      ],
+      "native_scale_px_per_font_unit": {
+        "x": 0.7798165137614679,
+        "y": 0.7821229050279329
+      },
+      "target_px_per_font_unit": 0.42,
+      "actual_px_per_font_unit": {
+        "x": 0.419151376146789,
+        "y": 0.4211431027073485
+      },
+      "original_sha256": "e2db2d69217906081969068f42ee941f269c98d85ae3a59c321fb029be11a61d",
+      "frames": 75,
+      "source_webp_duration_ms": 7125,
+      "origin": [
+        583,
+        790
+      ],
+      "pixel_size": [
+        344,
+        280
+      ],
+      "font_baseline_y_in_original_canvas": 446.536312849162,
+      "aligned_guideline_y": 1030,
+      "visual_bounds": [
+        617.9375,
+        816.9230769230769,
+        892.0625,
+        1043.076923076923
+      ]
+    }
+  ]
+}
