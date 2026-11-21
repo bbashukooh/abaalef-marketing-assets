@@ -64,12 +64,14 @@
       ]
     }
   },
+  "cover_teacher_mascot_sha256": "84fa3c680f23110b5b6558119add26730758c96c16fd20d048f7b93c7e00aa07",
+  "native_handwriting_baseline_y": 245,
+  "hero_final_baseline_y": 877,
   "outputs": [
     "01-cover.jpg",
     "02-shin-animation.mp4",
     "02-shin-animation-preview.gif",
     "03-four-families.mp4",
-    "03-four-families-preview.gif",
-    "04-practice.jpg"
+    "03-four-families-preview.gif"
   ]
 }
