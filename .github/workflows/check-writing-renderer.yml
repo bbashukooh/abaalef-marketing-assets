@@ -1,0 +1,24 @@
+name: Check marketing renderer availability
+on:
+  push:
+    paths:
+      - '.github/workflows/check-writing-renderer.yml'
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source assets are present
+        run: |
+          test -f writing-campaign-2026-11-21/source/uni0634.isol.webp
+          test -f writing-campaign-2026-11-21/source/BabaAlef-Font-v1.0.2.ttf
+          mkdir -p writing-campaign-2026-11-21/preview
+          printf 'GitHub Actions available; source assets present.\n' > writing-campaign-2026-11-21/preview/workflow-check.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/preview/workflow-check.txt
+          git diff --cached --quiet && exit 0
+          git commit -m 'Verify marketing renderer runner access'
+          git push
