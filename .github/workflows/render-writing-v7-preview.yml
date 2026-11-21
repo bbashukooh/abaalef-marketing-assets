@@ -189,7 +189,7 @@ jobs:
           audit['outputs']=['01-cover.jpg','02-shin-animation.mp4','02-shin-animation-preview.gif','03-four-families.mp4','03-four-families-preview.gif','04-practice.jpg']
           (OUT/'verification.json').write_text(json.dumps(audit,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
           PY
-          python /tmp/ba-v7/render.py
+          python /tmp/ba-v7/render.py 2>&1 | tee /tmp/ba-v7/render.log
       - name: Archive preview artifacts only (never post automatically)
         run: |
           git config user.name 'github-actions[bot]'
@@ -197,4 +197,18 @@ jobs:
           git add writing-campaign-2026-11-21/preview/
           git diff --cached --quiet && exit 0
           git commit -m 'Preview actual locked V7 handwriting animations on approved board'
+          git pull --rebase origin main
+          git push
+
+      - name: Preserve diagnostic information on failure
+        if: failure()
+        run: |
+          mkdir -p writing-campaign-2026-11-21/diagnostics
+          if test -f /tmp/ba-v7/render.log; then cp /tmp/ba-v7/render.log writing-campaign-2026-11-21/diagnostics/latest-render.log; else printf 'Render did not reach the Python step; examine asset download or setup.\n' > writing-campaign-2026-11-21/diagnostics/latest-render.log; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/diagnostics/latest-render.log
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record writing renderer diagnostic'
+          git pull --rebase origin main
           git push
