@@ -1,0 +1,48 @@
+name: Verify and render exactly-sized V7 third slide
+on:
+  push:
+    branches:
+      - fix/writing-slide3-native-v7-20261121
+    paths:
+      - 'writing-campaign-2026-11-21/third-slide-fix/render.py'
+      - '.github/workflows/verify-writing-slide3-equal-font.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load exact immutable blank-board image and UI typeface
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/yoTvuykpKGLOWlbB' -o /tmp/baba-approved-empty-board.png
+          curl -fLsS --retry 3 --max-time 120 'https://babaalef.com/fonts/vazirmatn-extrabold.ttf' -o /tmp/vazirmatn-extrabold.ttf
+          python -m pip install --quiet pillow fonttools imageio-ffmpeg
+      - name: Check locked source hashes, exact common font scale, source frame sequence, baselines, layout; render
+        run: |
+          set -euo pipefail
+          python writing-campaign-2026-11-21/third-slide-fix/render.py | tee /tmp/baba-third-audit.log
+      - name: Commit outputs only on successful assertions
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/third-slide-fix/output/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Render corrected V7 third slide at one verified BabaAlef em scale'
+          git pull --rebase origin fix/writing-slide3-native-v7-20261121
+          git push origin HEAD:fix/writing-slide3-native-v7-20261121
+      - name: Preserve failure diagnostics
+        if: failure()
+        run: |
+          mkdir -p writing-campaign-2026-11-21/third-slide-fix/diagnostics/
+          if test -f /tmp/baba-third-audit.log; then cp /tmp/baba-third-audit.log writing-campaign-2026-11-21/third-slide-fix/diagnostics/latest.txt; else printf 'Failure before renderer: check asset download or dependencies\n' > writing-campaign-2026-11-21/third-slide-fix/diagnostics/latest.txt; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/third-slide-fix/diagnostics/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Diagnostic: third-slide equal-size renderer'
+          git pull --rebase origin fix/writing-slide3-native-v7-20261121
+          git push origin HEAD:fix/writing-slide3-native-v7-20261121
