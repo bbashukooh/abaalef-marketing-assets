@@ -77,7 +77,7 @@ jobs:
               frames=[]
               durations=[]
               with Image.open(p) as a:
-                  assert getattr(a,'n_frames',0)==n,(name,a.n_frames,n)
+                  assert 1<=getattr(a,'n_frames',0)<=n,(name,a.n_frames,n) # WebP can coalesce identical V7 frames without changing duration
                   assert a.size==(640,520)
                   for i in range(a.n_frames):
                       a.seek(i)
@@ -89,7 +89,8 @@ jobs:
                   if box:
                       if union is None:union=box
                       else:union=(min(union[0],box[0]),min(union[1],box[1]),max(union[2],box[2]),max(union[3],box[3]))
-              print(name,'frames',len(frames),'duration',sum(durations),'nontransparent bbox',union,'alpha max',frames[-1].getchannel('A').getextrema())
+              print(name,'frames',len(frames),'duration',sum(durations),'expected duration',ms,'nontransparent bbox',union,'alpha max',frames[-1].getchannel('A').getextrema())
+              assert abs(sum(durations)-ms)<=95,(name,'duration mismatch',sum(durations),ms)
               assert union is not None, 'Missing genuine animated ink'
               seqs[name]=(frames,durations,union)
               audit['animations'][name]={'sha256':digest,'frame_count':n,'duration_ms':ms,'observed_duration_ms':sum(durations),'visible_bbox':union}
