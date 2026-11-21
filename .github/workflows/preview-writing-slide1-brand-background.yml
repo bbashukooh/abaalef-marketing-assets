@@ -1,0 +1,54 @@
+name: Preview first-slide background from approved carousel palette
+on:
+  push:
+    branches:
+      - design/writing-slide1-brand-background-20261121
+    paths:
+      - 'writing-campaign-2026-11-21/first-slide-brand-background/render.py'
+      - '.github/workflows/preview-writing-slide1-brand-background.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render-cover-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get approved empty board, original mascot and headline typeface
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ba-v7
+          curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/yoTvuykpKGLOWlbB' -o /tmp/ba-v7/blank-board.png
+          curl -fLsS --retry 3 --max-time 120 'https://at.adobe.com/xIP3TywpRbFtXkSW' -o /tmp/ba-v7/teacher-mascot.jpeg
+          curl -fLsS --retry 3 --max-time 120 'https://babaalef.com/fonts/vazirmatn-extrabold.ttf' -o /tmp/ba-v7/ui.ttf
+          python -m pip install --quiet pillow fonttools uharfbuzz imageio-ffmpeg
+      - name: Re-render first slide only preserving exact V7 frames and geometry
+        run: |
+          set -euo pipefail
+          python writing-campaign-2026-11-21/first-slide-brand-background/render.py 2>&1 | tee /tmp/ba-v7/brand-render.log
+      - name: Commit only first-slide previews to isolated design branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/first-slide-brand-background/preview/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Preview branded peach-gold-mint background for animated cover'
+          git pull --rebase origin design/writing-slide1-brand-background-20261121
+          git push origin HEAD:design/writing-slide1-brand-background-20261121
+      - name: Preserve diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p writing-campaign-2026-11-21/first-slide-brand-background/diagnostics
+          if test -s /tmp/ba-v7/brand-render.log; then
+            cp /tmp/ba-v7/brand-render.log writing-campaign-2026-11-21/first-slide-brand-background/diagnostics/latest.txt
+          else
+            printf 'Renderer did not start; check download and dependencies\n' > writing-campaign-2026-11-21/first-slide-brand-background/diagnostics/latest.txt
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add writing-campaign-2026-11-21/first-slide-brand-background/diagnostics/latest.txt
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record first-slide palette renderer diagnostic'
+          git pull --rebase origin design/writing-slide1-brand-background-20261121
+          git push origin HEAD:design/writing-slide1-brand-background-20261121
