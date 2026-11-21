@@ -1,35 +1,22 @@
 VERIFIED locked font SHA256 33330473816a7fc0db3806d6ef573532955f8aafbebda64c12091e3751cc0f78
 Approved blank board size/hash (1092, 1440) 4731114e48192a418bb84e1640a61a918f9f136d137decd8f6acddf83544d3d9
+uni0635.medi frames 58 duration 5510 expected duration 6270 nontransparent bbox (42, 172, 598, 348) alpha max (0, 255)
+NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0635.medi 5510 6270
 uni0634.isol frames 61 duration 5795 expected duration 7220 nontransparent bbox (100, 50, 540, 470) alpha max (0, 255)
 NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0634.isol 5795 7220
-uni0628.isol frames 39 duration 3705 expected duration 4845 nontransparent bbox (42, 104, 598, 416) alpha max (0, 255)
-NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0628.isol 3705 4845
-uni062C.isol frames 56 duration 5320 expected duration 6555 nontransparent bbox (165, 50, 475, 470) alpha max (0, 255)
-NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni062C.isol 5320 6555
-uni0633.isol frames 59 duration 5605 expected duration 6365 nontransparent bbox (42, 81, 598, 439) alpha max (0, 255)
-NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0633.isol 5605 6365
 uni0645.isol frames 47 duration 4465 expected duration 5320 nontransparent bbox (164, 50, 476, 470) alpha max (0, 255)
 NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0645.isol 4465 5320
-Traceback (most recent call last):
-  File "/tmp/ba-v7/render.py", line 155, in <module>
-    render_video('02-shin-animation',8.0,hero_make)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/tmp/ba-v7/render.py", line 149, in render_video
-    subprocess.run(args,check=True)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.14/subprocess.py", line 555, in run
-    with Popen(*popenargs, **kwargs) as process:
-         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
-    self._execute_child(args, executable, preexec_fn, close_fds,
-    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                        pass_fds, cwd, env,
-                        ^^^^^^^^^^^^^^^^^^^
-    ...<5 lines>...
-                        gid, gids, uid, umask,
-                        ^^^^^^^^^^^^^^^^^^^^^^
-                        start_new_session, process_group)
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
-    raise child_exception_type(errno_num, err_msg, err_filename)
-FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'
+uni0638.fina frames 75 duration 7125 expected duration 8360 nontransparent bbox (65, 50, 575, 470) alpha max (0, 255)
+NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0638.fina 7125 8360
+uni063A.fina frames 48 duration 4560 expected duration 5795 nontransparent bbox (174, 50, 466, 470) alpha max (0, 255)
+NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni063A.fina 4560 5795
+uni0647.init frames 63 duration 5985 expected duration 6745 nontransparent bbox (89, 113, 551, 407) alpha max (0, 255)
+NOTE: encoded WebP duration differs from source-stage manifest, preserving the encoded timing: uni0647.init 5985 6745
+LOCKED-FONT BASELINES: {'uni0635.medi': 325.73279352226723, 'uni0634.isol': 288.37837837837833, 'uni0645.isol': 74.70588235294116, 'uni0638.fina': 446.536312849162, 'uni063A.fina': 259.34997503744387, 'uni0647.init': 379.5049567973984}
+GRID PLACEMENT uni0645.isol baseline 529 scale 0.4958333333333333 visual (637.3166666666666, 516.7916666666666, 792.0166666666667, 725.0416666666666)
+GRID PLACEMENT uni0638.fina baseline 529 scale 0.2395745280360665 visual (293.5723443223443, 433.9787264018033, 415.7553536207382, 534.6000281769512)
+GRID PLACEMENT uni063A.fina baseline 922 scale 0.7025871467440252 visual (612.2501635334604, 775.1293573372012, 817.4056103827157, 1070.2159589696919)
+GRID PLACEMENT uni0647.init baseline 922 scale 0.6191254451054575 visual (212.1021646143857, 756.9611752969167, 498.1381202531071, 938.9840561579213)
+RENDERED 01-introduction-animation duration 8.0 size 137080
+RENDERED 02-shin-animation duration 8.0 size 208447
+RENDERED 03-four-families duration 7.5 size 213139
