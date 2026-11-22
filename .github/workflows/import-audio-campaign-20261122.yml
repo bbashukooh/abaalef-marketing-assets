@@ -1,53 +1,59 @@
-name: Probe accessible Descript campaign video media
+name: Import approved Baba Alef audio clips from public Descript video sources
 on:
   push:
     paths:
       - '.github/workflows/import-audio-campaign-20261122.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
-  probe:
+  import:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install browser for extracting public video stream URLs
+      - name: Install browser
         run: |
           python3 -m pip install --quiet playwright
           python3 -m playwright install chromium --with-deps
-      - name: Inspect publicly shared videos
+      - name: Download directly from the approved video players
+        shell: bash
         run: |
+          set -euo pipefail
+          mkdir -p campaigns/2026-11-22-audio
           python3 - <<'PY'
-          import asyncio,urllib.parse
+          import asyncio,subprocess
+          from pathlib import Path
           from playwright.async_api import async_playwright
-          URLS=["https://share.descript.com/view/j3eZl7P5aPV","https://share.descript.com/view/82ol8Yn8Jpj"]
+          videos=[
+            ('https://share.descript.com/view/j3eZl7P5aPV','02-letters-animated.mp4'),
+            ('https://share.descript.com/view/82ol8Yn8Jpj','03-words-animated.mp4')
+          ]
           async def main():
-              async with async_playwright() as p:
-                  b=await p.chromium.launch(headless=True)
-                  for i,url in enumerate(URLS):
-                      page=await b.new_page()
-                      candidates=[]
-                      def logrequest(request):
-                          u=request.url
-                          if any(x in u.lower() for x in ['m3u8','mp4','mpd','video/','master.json','playlist','manifest']):
-                              candidates.append(u)
-                      page.on('request',logrequest)
-                      try:
-                          await page.goto(url,wait_until='domcontentloaded',timeout=50000)
-                          await page.wait_for_timeout(14000)
-                          print('PAGE',i,'title',await page.title())
-                          for j,frame in enumerate(page.frames):
-                              try:
-                                  nodes=await frame.locator('video').evaluate_all('(els)=>els.map(e=>({src:e.src,currentSrc:e.currentSrc,readyState:e.readyState}))')
-                                  if nodes: print('VIDEO',i,j,str(nodes)[:200])
-                              except Exception as e: print('FRAMERR',str(e)[:120])
-                          print('CAPTURED',i,len(candidates))
-                          for u in dict.fromkeys(candidates):
-                              z=urllib.parse.urlparse(u)
-                              print('SOURCE',i,z.scheme+'://'+z.hostname+z.path[:160])
-                      except Exception as e:
-                          print('ERROR',i,str(e)[:500])
-                      await page.close()
-                  await b.close()
+            async with async_playwright() as p:
+              browser=await p.chromium.launch()
+              for pageurl,filename in videos:
+                page=await browser.new_page()
+                await page.goto(pageurl,wait_until='domcontentloaded',timeout=60000)
+                await page.locator('video').first.wait_for(timeout=30000)
+                source=await page.locator('video').first.get_attribute('src')
+                assert source and source.startswith('https://api.descript.com/'), filename
+                dest=str(Path('campaigns/2026-11-22-audio')/filename)
+                print('Extracting',filename, 'from authenticated public player stream')
+                subprocess.run(['ffmpeg','-nostdin','-loglevel','error','-y','-headers','Referer: https://share.descript.com/\r\n','-i',source,'-c','copy','-movflags','+faststart',dest],check=True)
+                assert Path(dest).stat().st_size>100000,filename
+                print('Verified',filename,Path(dest).stat().st_size)
+                await page.close()
+              await browser.close()
           asyncio.run(main())
           PY
+      - name: Commit validated media
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add campaigns/2026-11-22-audio/02-letters-animated.mp4 campaigns/2026-11-22-audio/03-words-animated.mp4
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add approved animated letter and word audio videos'
+          git push
