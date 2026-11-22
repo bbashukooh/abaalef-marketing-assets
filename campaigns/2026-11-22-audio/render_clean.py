@@ -105,7 +105,7 @@ def make_slide(base_jpg: str, specs, width, height, radius, filename: str):
 def concat_final():
     # User-approved order: Cover -> real practice video -> letters -> words.
     inputs=[
-      ROOT/"01-cover.jpg", ROOT/"04-practice.mp4",
+      ROOT/"01-cover.jpg", ROOT/"04-practice-clean.mp4",
       ROOT/"02-letters-clean.mp4", ROOT/"03-words-clean.mp4",
     ]
     for p in inputs:
