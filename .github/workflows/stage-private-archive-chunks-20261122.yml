@@ -1,0 +1,51 @@
+name: Stage temporary verified base64 chunks for private marketing archive
+on:
+  push:
+    paths:
+      - '.github/workflows/stage-private-archive-chunks-20261122.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  stage:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Split two published MP4 files into GitHub-readable chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, hashlib, json
+          from pathlib import Path
+          base=Path('campaigns/2026-11-22-audio')
+          root=base/'.archive-transfer'
+          root.mkdir(parents=True, exist_ok=True)
+          manifest={}
+          for name in ('04-practice-clean.mp4','05-all-slides-clean-reordered.mp4'):
+              data=(base/name).read_bytes()
+              gitsha=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\x00'+data).hexdigest()
+              content=base64.b64encode(data).decode('ascii')
+              length=975000
+              out=root/name
+              out.mkdir(parents=True,exist_ok=True)
+              parts=[content[i:i+length] for i in range(0,len(content),length)]
+              for i,chunk in enumerate(parts):
+                  assert len(chunk)<1000000
+                  (out/f'part-{i:02d}.b64').write_text(chunk)
+              manifest[name]={'sha':gitsha,'size':len(data),'parts':len(parts)}
+              print('STAGED',name,'bytes',len(data),'parts',len(parts),'gitblobsha',gitsha,flush=True)
+          (root/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - name: Commit temporary parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add campaigns/2026-11-22-audio/.archive-transfer/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Temporarily stage validated chunks for private media archive'
+          git push
