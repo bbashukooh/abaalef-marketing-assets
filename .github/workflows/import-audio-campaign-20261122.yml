@@ -17,8 +17,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p campaigns/2026-11-22-audio
-          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 240 'https://at.adobe.com/VCdtamryO8XIcf1u' -o 'campaigns/2026-11-22-audio/01-cover.png'
           curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 240 'https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2F86d8fd48-dfee-46d3-880a-5bea1d0f8a41%2Fhls%3Fexpiration%3D1795445722273%26signature%3D1b5dbb0e617b3648b5d395bcb8de5bd928b129b4282be3723dd29e0a034a826f&filename=02+Animated.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1795442122&signature=2c2846df435fa4320f84bcbb8d8f966303dcf46a54c63f0032a3b5f22d6c' -o 'campaigns/2026-11-22-audio/02-letters-animated.mp4'
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 240 'https://at.adobe.com/VCdtamryO8XIcf1u' -o 'campaigns/2026-11-22-audio/01-cover.png'
           curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 240 'https://media.descriptusercontent.com/v3/proxy/remux?url=https%3A%2F%2Fapi.descript.com%2Fv2%2Fpublished_projects%2Ff74f08d4-8893-4991-a732-d1e3d017c5e7%2Fhls%3Fexpiration%3D1795445724585%26signature%3De15154fb2193d8ea4b8e41359e45b82379ba6a0378a2f80fb91709bb12754b2d&filename=03+Animated.mp4&mediaCacheBucketName=production-273614-media-cache&expiration=1795442125&signature=26ccbc4c4ced52ea4c4e3b2725d260184682aaf553342c22b5107e65b7fee340' -o 'campaigns/2026-11-22-audio/03-words-animated.mp4'
           curl --fail --location --silent --show-error --retry 3 --retry-delay 2 --max-time 240 'https://at.adobe.com/m8ydulBAUTDe8VFw' -o 'campaigns/2026-11-22-audio/04-practice-original.mp4'
       - name: Validate all assets and original file checksums
