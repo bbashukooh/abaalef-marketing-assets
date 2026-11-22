@@ -34,8 +34,8 @@ jobs:
           w,h=[meta['streams'][0][v] for v in ('width','height')]
           # Only the small lower-right watermark added by Descript.
           # The approved babaalef.com logo above it remains untouched.
-          x,y=int(w*.54),int(h*.863)
-          rw,rh=int(w*.38),int(h*.073)
+          x,y=int(w*.54),int(h*.908)
+          rw,rh=int(w*.40),int(h*.076)
           assert x+rw<w and y+rh<h, (w,h,x,y,rw,rh)
           print('Frame size',w,h,'footer correction',x,y,rw,rh,flush=True)
           subprocess.run([
