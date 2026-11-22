@@ -5,8 +5,6 @@ No Descript source videos are used. Retains the exact approved glyph pixels.
 from __future__ import annotations
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
-from pydub import AudioSegment
-import math
 import subprocess
 
 ROOT = Path(__file__).resolve().parent
@@ -56,22 +54,21 @@ def make_slide(base_jpg: str, specs, width, height, radius, filename: str):
     with Image.open(still) as img:
         assert img.size == (W,H), ("Unexpected image dimensions",still,img.size)
         print("Approved static slide", still.name, img.size, flush=True)
-    audio_assets = []
+    assets = []
     moments = []
     onset = 0.65
+    last_dur = 0
     for filename_mp3, x, y in specs:
-        sound = AudioSegment.from_mp3(SOURCE / filename_mp3)
-        sound = sound.set_frame_rate(44100).set_channels(2)
-        seconds = len(sound)/1000
-        audio_assets.append((onset, sound))
+        original = SOURCE / filename_mp3
+        info = subprocess.run(["ffprobe","-v","error","-show_entries","format=duration",
+                               "-of","default=noprint_wrappers=1:nokey=1",str(original)],
+                              capture_output=True,text=True,check=True)
+        seconds = float(info.stdout.strip())
+        assets.append((round(onset*1000), original))
         moments.append((max(0,onset-.15), onset + seconds+.15,x,y))
+        last_dur = seconds
         onset += seconds+1.20
-    duration = audio_assets[-1][0] + len(audio_assets[-1][1])/1000 + .80
-    timeline = AudioSegment.silent(duration=math.ceil(duration*1000),frame_rate=44100).set_channels(2)
-    for start,snd in audio_assets:
-        timeline=timeline.overlay(snd,position=round(start*1000))
-    wav = ROOT / f"_temp-{filename}.wav"
-    timeline.export(wav,format="wav")
+    duration = assets[-1][0]/1000 + last_dur + .80
     overlays=[]
     for i, (_, _, x, y) in enumerate(moments):
         p=ROOT/f"_temp-{filename}-{i:02}.png"
@@ -81,7 +78,7 @@ def make_slide(base_jpg: str, specs, width, height, radius, filename: str):
          "-loop","1","-framerate",str(FPS),"-i",str(still)]
     for overlay in overlays:
         cmd+=["-loop","1","-framerate",str(FPS),"-i",str(overlay)]
-    cmd+=["-i",str(wav)]
+    for start_ms, track in assets: cmd+=["-i",str(track)]
     chain=[]
     latest="[0:v]"
     for idx,(start,end,x,y) in enumerate(moments):
@@ -89,12 +86,19 @@ def make_slide(base_jpg: str, specs, width, height, radius, filename: str):
         chain.append(f"{latest}[{idx+1}:v]overlay=0:0:format=auto:enable='between(t,{start:.3f},{end:.3f})'{label}")
         latest=label
     chain.append(f"{latest}format=yuv420p[v]")
-    cmd+=["-filter_complex",";".join(chain),"-map","[v]","-map",f"{len(overlays)+1}:a:0",
+    audio_labels=[]
+    for i,(start_ms,track) in enumerate(assets):
+        idx=1+len(overlays)+i
+        label=f"[a{i}]"
+        chain.append(f"[{idx}:a]adelay={start_ms}:all=1,aresample=48000{label}")
+        audio_labels.append(label)
+    chain.append("".join(audio_labels)+f"amix=inputs={len(assets)}:normalize=0:duration=longest,apad,atrim=duration={duration:.3f}[aout]")
+    cmd+=["-filter_complex",";".join(chain),"-map","[v]","-map","[aout]",
           "-t",f"{duration:.3f}","-r",str(FPS),"-c:v","libx264","-preset","veryfast",
           "-crf","21","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k",
           "-movflags","+faststart",str(ROOT/filename)]
     run(cmd)
-    for p in overlays+[wav]:
+    for p in overlays:
         p.unlink(missing_ok=True)
     print("COMPLETE",filename,"duration",duration,flush=True)
 
